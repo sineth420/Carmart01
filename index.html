@@ -149,6 +149,16 @@
     pointer-events: none; color: #94a3b8; font-size: 12px;
   }
 
+  /* Auth Tabs */
+  .auth-tab {
+    flex: 1; padding: 10px; text-align: center; cursor: pointer;
+    font-weight: 600; color: #94a3b8; border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    color: var(--primary); border-bottom-color: var(--primary);
+  }
+
   /* Cards */
   .vehicle-card {
     background: var(--white); border-radius: 12px; overflow: hidden;
@@ -483,26 +493,55 @@
 <div class="modal-overlay" id="signInModal" onclick="if(event.target.id==='signInModal') closeSignIn()">
   <div class="modal glass-card">
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-2xl font-bold text-white">Sign In to Car Mart</h3>
+      <h3 class="text-2xl font-bold text-white">Welcome to Car Mart</h3>
       <button onclick="closeSignIn()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
-    <form id="signInForm" class="space-y-4">
+    
+    <!-- Tabs -->
+    <div class="flex border-b border-slate-600 mb-6">
+      <div class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">Login</div>
+      <div class="auth-tab" id="signupTab" onclick="switchAuthTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
-        <input type="email" id="signInEmail" required placeholder="you@example.com" class="input-glass">
+        <input type="email" id="loginEmail" required placeholder="you@example.com" class="input-glass">
       </div>
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-        <input type="password" id="signInPassword" required placeholder="••••••••" class="input-glass">
-        <p id="passwordError" class="text-red-500 text-xs mt-1 hidden">Password must be 6 characters long</p>
+        <input type="password" id="loginPassword" required placeholder="••••••••" class="input-glass">
+        <p id="loginPassError" class="text-red-500 text-xs mt-1 hidden">Password must be 6 characters long</p>
       </div>
-      <div class="flex items-center justify-between text-sm">
-        <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-orange-500 focus:ring-orange-500"> Remember me</label>
-        <a href="#" class="text-orange-500 hover:underline">Forgot password?</a>
-      </div>
-      <button type="submit" class="w-full btn-primary justify-center mt-2">Sign In</button>
+      <button type="submit" class="w-full btn-primary justify-center mt-2">Login</button>
       <p class="text-center text-sm text-slate-400 mt-4">
-        Don't have an account? <a href="#" class="text-orange-500 font-semibold hover:underline">Sign up free</a>
+        Don't have an account? <a href="#" onclick="switchAuthTab('signup')" class="text-orange-500 font-semibold hover:underline">Sign up free</a>
+      </p>
+    </form>
+
+    <!-- Sign Up Form -->
+    <form id="signupForm" class="space-y-4 hidden">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
+        <input type="text" id="signupName" required placeholder="John Doe" class="input-glass">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Phone Number</label>
+        <input type="tel" id="signupPhone" required placeholder="0771234567" class="input-glass">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+        <input type="email" id="signupEmail" required placeholder="you@example.com" class="input-glass">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
+        <input type="password" id="signupPassword" required placeholder="••••••••" class="input-glass">
+        <p id="signupPassError" class="text-red-500 text-xs mt-1 hidden">Password must be 6 characters long</p>
+      </div>
+      <button type="submit" class="w-full btn-primary justify-center mt-2">Sign Up</button>
+      <p class="text-center text-sm text-slate-400 mt-4">
+        Already have an account? <a href="#" onclick="switchAuthTab('login')" class="text-orange-500 font-semibold hover:underline">Login</a>
       </p>
     </form>
   </div>
@@ -557,7 +596,10 @@
     document.getElementById('sidePanel').classList.remove('open');
     document.getElementById('panelOverlay').classList.remove('open');
   }
-  function openSignIn() { document.getElementById('signInModal').classList.add('open'); }
+  function openSignIn() { 
+    document.getElementById('signInModal').classList.add('open'); 
+    switchAuthTab('login'); // Default to login tab
+  }
   function closeSignIn() { document.getElementById('signInModal').classList.remove('open'); }
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -566,19 +608,42 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  // ===== PASSWORD VALIDATION =====
-  const passInput = document.getElementById('signInPassword');
-  const passError = document.getElementById('passwordError');
-  
-  passInput.addEventListener('input', () => {
-    if (passInput.value.length > 0 && passInput.value.length < 6) {
-      passInput.classList.add('input-error');
-      passError.classList.remove('hidden');
+  // ===== AUTH TAB SWITCHING =====
+  function switchAuthTab(tab) {
+    const loginTab = document.getElementById('loginTab');
+    const signupTab = document.getElementById('signupTab');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+
+    if (tab === 'login') {
+      loginTab.classList.add('active');
+      signupTab.classList.remove('active');
+      loginForm.classList.remove('hidden');
+      signupForm.classList.add('hidden');
     } else {
-      passInput.classList.remove('input-error');
-      passError.classList.add('hidden');
+      signupTab.classList.add('active');
+      loginTab.classList.remove('active');
+      signupForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
     }
-  });
+  }
+
+  // ===== PASSWORD VALIDATION =====
+  function setupPasswordValidation(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    input.addEventListener('input', () => {
+      if (input.value.length > 0 && input.value.length < 6) {
+        input.classList.add('input-error');
+        error.classList.remove('hidden');
+      } else {
+        input.classList.remove('input-error');
+        error.classList.add('hidden');
+      }
+    });
+  }
+  setupPasswordValidation('loginPassword', 'loginPassError');
+  setupPasswordValidation('signupPassword', 'signupPassError');
 
   // ===== FIREBASE AUTHENTICATION =====
   auth.onAuthStateChanged((user) => {
@@ -597,10 +662,11 @@
     }
   });
 
-  document.getElementById('signInForm').addEventListener('submit', async (e) => {
+  // Login Logic
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('signInEmail').value;
-    const password = document.getElementById('signInPassword').value;
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
     
     if (password.length < 6) {
       showToast("Password must be 6 characters long");
@@ -610,22 +676,52 @@
     try {
       await auth.signInWithEmailAndPassword(email, password);
       closeSignIn();
-      showToast("Signed in successfully! Welcome back.");
+      showToast("Logged in successfully! Welcome back.");
     } catch (error) {
+      // Firebase hides exact reasons for security, but usually invalid-credential means wrong password or email doesn't exist.
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-        try {
-          await auth.createUserWithEmailAndPassword(email, password);
-          closeSignIn();
-          showToast("Account created & signed in successfully!");
-        } catch (signUpError) {
-          if (signUpError.code === 'auth/email-already-in-use') {
-            showToast("Wrong email or password");
-          } else {
-            showToast("Error: " + signUpError.message);
-          }
-        }
+        showToast("Account not found or password is wrong. Please Sign Up if you don't have an account.");
+        switchAuthTab('signup'); // Auto switch to signup tab if account doesn't exist
       } else {
-        showToast("Wrong email or password");
+        showToast("Error: " + error.message);
+      }
+    }
+  });
+
+  // Sign Up Logic
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('signupName').value;
+    const phone = document.getElementById('signupPhone').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    
+    if (password.length < 6) {
+      showToast("Password must be 6 characters long");
+      return;
+    }
+
+    try {
+      // 1. Create the user in Firebase Authentication
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      
+      // 2. Store the user's UID, Name, and Phone in the Realtime Database under 'users' node
+      await db.ref('users/' + user.uid).set({
+        uid: user.uid,
+        name: name,
+        phone: phone,
+        email: email
+      });
+
+      closeSignIn();
+      showToast("Account created successfully! You are now logged in.");
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
+        showToast("This email is already registered. Please Login.");
+        switchAuthTab('login'); // Auto switch to login tab if account exists
+      } else {
+        showToast("Error: " + error.message);
       }
     }
   });
