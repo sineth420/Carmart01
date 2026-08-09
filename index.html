@@ -11,7 +11,6 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<!-- Added Firebase Auth SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
@@ -23,18 +22,17 @@
   * { box-sizing: border-box; }
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    /* Slightly darker background, not pitch black */
     background-color: #334155; 
     background-image: 
       radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.1), transparent 40%),
       radial-gradient(circle at 100% 100%, rgba(234, 88, 12, 0.1), transparent 40%);
-    color: #f8fafc; /* Light text for outside the glass */
+    color: #f8fafc; 
     margin: 0;
   }
 
   /* Dark Glassmorphism Box Style */
   .glass-card {
-    background: rgba(15, 23, 42, 0.75); /* Dark slate glass tint */
+    background: rgba(15, 23, 42, 0.75); 
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -77,7 +75,7 @@
   .side-panel {
     position: fixed; top: 0; right: 0; height: 100vh;
     width: 320px; max-width: 85vw;
-    background: #1e293b; /* Darker panel for dark mode */
+    background: #1e293b; 
     box-shadow: -10px 0 30px rgba(0,0,0,0.2);
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -111,7 +109,7 @@
   }
   .modal-overlay.open .modal { transform: scale(1); }
 
-  /* Inputs - Standard White Background */
+  /* Inputs */
   .input {
     width: 100%; padding: 12px 16px; border: 1px solid #475569;
     border-radius: 8px; font-size: 15px; font-family: inherit;
@@ -136,6 +134,12 @@
     background: rgba(255, 255, 255, 0.12); 
     box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); 
   }
+  /* Error state for inputs */
+  .input-glass.input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+  }
+
   select.input-glass option { background: #1e293b; color: #ffffff; }
 
   .select-wrapper { position: relative; }
@@ -187,7 +191,7 @@
 </head>
 <body class="antialiased">
 
-<!-- NAVBAR (Dark Glass Design) -->
+<!-- NAVBAR -->
 <nav class="glass-card sticky top-0 z-50" style="border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16 gap-4">
@@ -211,10 +215,8 @@
       </div>
 
       <div class="hidden md:flex items-center gap-3">
-        <!-- Sign In / My Account Button (Desktop) -->
         <button id="navSignInBtn" onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>
         <a href="myaccount.html" id="navMyAccountBtn" class="hidden text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">My Account</a>
-        
         <a href="add.html" class="btn-primary text-sm no-underline">
           <i class="fa-solid fa-plus"></i> Post Ad
         </a>
@@ -250,7 +252,6 @@
     <a href="#video-feature" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-video w-5"></i> Video Ads
     </a>
-    <!-- Sign In / My Account Button (Mobile) -->
     <button id="mobileSignInBtn" onclick="openSignIn(); closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
       <i class="fa-solid fa-user w-5"></i> Sign In
     </button>
@@ -278,7 +279,6 @@
       </p>
     </div>
 
-    <!-- Main Search Bar (Dark Glass Box) -->
     <div class="max-w-5xl mx-auto glass-card p-4 rounded-xl">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
         <div class="md:col-span-6 relative">
@@ -384,13 +384,12 @@
   </div>
 </section>
 
-<!-- RECENT LISTINGS (FIREBASE RTDB) -->
+<!-- RECENT LISTINGS -->
 <section id="listings" class="py-12 bg-slate-800/30">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center mb-8">
       <div>
         <h2 id="listingTitle" class="text-2xl font-bold text-white">Recent Vehicle Ads</h2>
-        <p class="text-slate-400 text-sm mt-1">Loaded directly from Firebase Realtime Database</p>
       </div>
       <button onclick="loadVehicles()" class="text-orange-500 font-semibold text-sm hover:underline">Reset Search</button>
     </div>
@@ -433,18 +432,23 @@
         </a>
       </div>
       <div class="relative">
-        <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative group cursor-pointer">
-          <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Video Thumbnail" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform">
-              <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+        <a href="add.html" class="block relative group cursor-pointer">
+          <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative">
+            <video class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted loop autoplay playsinline>
+              <source src="media/video/cradd.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+              </div>
             </div>
+            <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-md text-sm font-medium">0:20</div>
           </div>
-          <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-md text-sm font-medium">0:18 / 0:20</div>
-        </div>
-        <div class="absolute -bottom-4 -left-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm hidden md:block">
-          Toyota Aqua 2014
-        </div>
+          <div class="absolute -bottom-4 -left-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm hidden md:block">
+            Add your video now
+          </div>
+        </a>
       </div>
     </div>
   </div>
@@ -490,6 +494,7 @@
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
         <input type="password" id="signInPassword" required placeholder="••••••••" class="input-glass">
+        <p id="passwordError" class="text-red-500 text-xs mt-1 hidden">Password must be 6 characters long</p>
       </div>
       <div class="flex items-center justify-between text-sm">
         <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-orange-500 focus:ring-orange-500"> Remember me</label>
@@ -521,7 +526,7 @@
   
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const auth = firebase.auth(); // Initialized Auth
+  const auth = firebase.auth();
   const vehiclesRef = db.ref('vehicles');
 
   // ===== 25 DISTRICTS OF SRI LANKA =====
@@ -561,18 +566,29 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
+  // ===== PASSWORD VALIDATION =====
+  const passInput = document.getElementById('signInPassword');
+  const passError = document.getElementById('passwordError');
+  
+  passInput.addEventListener('input', () => {
+    if (passInput.value.length > 0 && passInput.value.length < 6) {
+      passInput.classList.add('input-error');
+      passError.classList.remove('hidden');
+    } else {
+      passInput.classList.remove('input-error');
+      passError.classList.add('hidden');
+    }
+  });
+
   // ===== FIREBASE AUTHENTICATION =====
-  // Listen for auth state changes
   auth.onAuthStateChanged((user) => {
     if (user) {
-      // User is signed in
       document.getElementById('navSignInBtn').classList.add('hidden');
       document.getElementById('navMyAccountBtn').classList.remove('hidden');
       document.getElementById('mobileSignInBtn').classList.add('hidden');
       document.getElementById('mobileMyAccountBtn').classList.remove('hidden');
       document.getElementById('mobileMyAccountBtn').classList.add('flex');
     } else {
-      // User is signed out
       document.getElementById('navSignInBtn').classList.remove('hidden');
       document.getElementById('navMyAccountBtn').classList.add('hidden');
       document.getElementById('mobileSignInBtn').classList.remove('hidden');
@@ -581,29 +597,35 @@
     }
   });
 
-  // Sign In Form Submit
   document.getElementById('signInForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('signInEmail').value;
     const password = document.getElementById('signInPassword').value;
     
+    if (password.length < 6) {
+      showToast("Password must be 6 characters long");
+      return;
+    }
+
     try {
-      // Try to sign in
       await auth.signInWithEmailAndPassword(email, password);
       closeSignIn();
       showToast("Signed in successfully! Welcome back.");
     } catch (error) {
-      // If user doesn't exist, create the account (store him in Firebase)
-      if (error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         try {
           await auth.createUserWithEmailAndPassword(email, password);
           closeSignIn();
           showToast("Account created & signed in successfully!");
         } catch (signUpError) {
-          showToast("Error: " + signUpError.message);
+          if (signUpError.code === 'auth/email-already-in-use') {
+            showToast("Wrong email or password");
+          } else {
+            showToast("Error: " + signUpError.message);
+          }
         }
       } else {
-        showToast("Error: " + error.message);
+        showToast("Wrong email or password");
       }
     }
   });
@@ -646,7 +668,6 @@
     `).join('');
   }
 
-  // Fetch Recent Ads (Newly updated first)
   async function loadVehicles() {
     document.getElementById('listingTitle').innerText = "Recent Vehicle Ads";
     const grid = document.getElementById('vehicleGrid');
@@ -682,7 +703,6 @@
     }
   }
 
-  // Search Ads
   async function performSearch() {
     const query = (document.getElementById('heroSearch')?.value || document.getElementById('navSearch')?.value || document.getElementById('mobileSearch')?.value || '').trim().toLowerCase();
     const locationVal = document.getElementById('heroLocation')?.value || 'All Sri Lanka';
@@ -735,7 +755,6 @@
     }
   }
 
-  // Filter by Category
   async function filterByCategory(category) {
     document.getElementById('listingTitle').innerText = category + " Ads";
     const grid = document.getElementById('vehicleGrid');
@@ -785,7 +804,6 @@
     return new Date(ts).toLocaleDateString();
   }
 
-  // Initialize on load
   window.onload = function() {
     populateLocations();
     loadVehicles();
