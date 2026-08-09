@@ -337,19 +337,19 @@
 
       <!-- Contact Actions -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button class="btn-primary" onclick="showToast('Calling seller...')" aria-label="Call Seller">
+        <button id="callBtn" class="btn-primary" aria-label="Call Seller">
           <i class="fa-solid fa-phone" aria-hidden="true"></i> Call Seller
         </button>
-        <button class="btn-outline" onclick="showToast('Opening WhatsApp...')" aria-label="Contact on WhatsApp">
+        <button id="whatsappBtn" class="btn-outline" aria-label="Contact on WhatsApp">
           <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i> WhatsApp
         </button>
       </div>
       
       <div class="mt-6 pt-6 border-t border-slate-700 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 text-xl font-bold flex-shrink-0">U</div>
+        <div id="sellerInitial" class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 text-xl font-bold flex-shrink-0">U</div>
         <div>
-          <p class="font-bold text-white">User Name</p>
-          <p class="text-xs text-slate-400">Member since 2024</p>
+          <p id="sellerName" class="font-bold text-white">User Name</p>
+          <p id="sellerPhone" class="text-xs text-slate-400">No phone provided</p>
         </div>
       </div>
 
@@ -471,6 +471,49 @@
         if (adData.createdAt) {
           document.getElementById('adTime').innerText = getTimeAgo(adData.createdAt);
         }
+
+        // ===== POPULATE SELLER INFO & BUTTONS =====
+        const sellerName = adData.sellerName || "Unknown Seller";
+        const mobile = adData.mobileNumber || "";
+        const whatsapp = adData.whatsappNumber || mobile;
+
+        // Update Seller Card UI
+        document.getElementById('sellerName').innerText = sellerName;
+        document.getElementById('sellerPhone').innerText = mobile ? mobile : "No phone provided";
+        
+        // Set the initial letter of the seller's name
+        const initial = sellerName.charAt(0).toUpperCase();
+        document.getElementById('sellerInitial').innerText = initial;
+
+        // Update Call Button Logic
+        const callBtn = document.getElementById('callBtn');
+        if (mobile) {
+          callBtn.addEventListener('click', () => {
+            window.location.href = `tel:${mobile}`;
+          });
+        } else {
+          callBtn.addEventListener('click', () => {
+            showToast("Phone number not available");
+          });
+        }
+
+        // Update WhatsApp Button Logic
+        const whatsappBtn = document.getElementById('whatsappBtn');
+        if (whatsapp) {
+          // Format number for WhatsApp API (remove spaces, dashes, etc. If starts with 0, replace with 94)
+          let waNum = whatsapp.replace(/\D/g, '');
+          if (waNum.startsWith('0')) {
+            waNum = '94' + waNum.substring(1);
+          }
+          whatsappBtn.addEventListener('click', () => {
+            window.open(`https://wa.me/${waNum}`, '_blank');
+          });
+        } else {
+          whatsappBtn.addEventListener('click', () => {
+            showToast("WhatsApp number not available");
+          });
+        }
+
       } else {
         adContent.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500">Ad not found. It may have been deleted.</div>';
       }
