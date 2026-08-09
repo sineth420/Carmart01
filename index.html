@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Mart - Buy & Sell Vehicles in Sri Lanka</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<!-- Added Firebase Auth SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<style>
+  :root {
+    --primary: #f97316; /* Orange */
+    --primary-dark: #ea580c;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    /* Slightly darker background, not pitch black */
+    background-color: #334155; 
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.1), transparent 40%),
+      radial-gradient(circle at 100% 100%, rgba(234, 88, 12, 0.1), transparent 40%);
+    color: #f8fafc; /* Light text for outside the glass */
+    margin: 0;
+  }
+
+  /* Dark Glassmorphism Box Style */
+  .glass-card {
+    background: rgba(15, 23, 42, 0.75); /* Dark slate glass tint */
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    color: #ffffff;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px -2px rgba(249, 115, 22, 0.3);
+  }
+
+  /* Burger Menu */
+  .burger { width: 28px; height: 20px; position: relative; cursor: pointer; background: transparent; border: none; }
+  .burger span { display: block; position: absolute; height: 3px; width: 100%; background: var(--white); border-radius: 2px; transition: all 0.3s ease; }
+  .burger span:nth-child(1) { top: 0; }
+  .burger span:nth-child(2) { top: 8px; }
+  .burger span:nth-child(3) { top: 16px; }
+  .burger.open span:nth-child(1) { top: 8px; transform: rotate(45deg); background: var(--primary); }
+  .burger.open span:nth-child(2) { opacity: 0; }
+  .burger.open span:nth-child(3) { top: 8px; transform: rotate(-45deg); background: var(--primary); }
+
+  /* Side Panel */
+  .side-panel {
+    position: fixed; top: 0; right: 0; height: 100vh;
+    width: 320px; max-width: 85vw;
+    background: #1e293b; /* Darker panel for dark mode */
+    box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    padding: 24px;
+    overflow-y: auto;
+    color: white;
+  }
+  .side-panel.open { transform: translateX(0); }
+  .panel-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s; z-index: 99;
+  }
+  .panel-overlay.open { opacity: 1; pointer-events: all; }
+
+  /* Modal (Sign In - Dark Glass) */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    border-radius: 16px; padding: 32px;
+    width: 100%; max-width: 440px; transform: scale(0.95);
+    transition: transform 0.3s; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  /* Inputs - Standard White Background */
+  .input {
+    width: 100%; padding: 12px 16px; border: 1px solid #475569;
+    border-radius: 8px; font-size: 15px; font-family: inherit;
+    transition: all 0.2s; background: #0f172a; color: var(--white);
+    -webkit-appearance: none; appearance: none;
+  }
+  .input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+  
+  /* Inputs - For Dark Glass */
+  .input-glass {
+    width: 100%; padding: 12px 16px; 
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px; font-size: 15px; font-family: inherit;
+    transition: all 0.2s; 
+    background: rgba(255, 255, 255, 0.08); 
+    color: #ffffff;
+    -webkit-appearance: none; appearance: none;
+  }
+  .input-glass::placeholder { color: #94a3b8; }
+  .input-glass:focus { 
+    outline: none; border-color: var(--primary); 
+    background: rgba(255, 255, 255, 0.12); 
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); 
+  }
+  select.input-glass option { background: #1e293b; color: #ffffff; }
+
+  .select-wrapper { position: relative; }
+  .select-wrapper::after {
+    content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+    position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+    pointer-events: none; color: #94a3b8; font-size: 12px;
+  }
+
+  /* Cards */
+  .vehicle-card {
+    background: var(--white); border-radius: 12px; overflow: hidden;
+    border: 1px solid #f1f5f9; transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  }
+  .vehicle-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    border-color: rgba(249, 115, 22, 0.3);
+  }
+  .vehicle-card img { transition: transform 0.4s ease; }
+  .vehicle-card:hover img { transform: scale(1.05); }
+
+  .video-badge {
+    background: rgba(249, 115, 22, 0.95); color: white;
+    padding: 4px 8px; border-radius: 6px; font-size: 11px;
+    font-weight: 600; display: inline-flex; align-items: center; gap: 4px;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Skeleton Loader */
+  .skeleton {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--white); color: #0f172a;
+    padding: 12px 24px; border-radius: 8px; z-index: 300;
+    font-weight: 500; transition: transform 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- NAVBAR (Dark Glass Design) -->
+<nav class="glass-card sticky top-0 z-50" style="border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 gap-4">
+      
+      <a href="index.html" class="flex items-center gap-2 flex-shrink-0">
+        <div class="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-car text-white"></i>
+        </div>
+        <span class="text-xl font-extrabold tracking-tight text-white">Car Mart</span>
+      </a>
+
+      <!-- Desktop Search -->
+      <div class="hidden md:flex flex-1 max-w-xl items-center border border-white/15 rounded-lg overflow-hidden hover:border-orange-400 transition-colors bg-white/5">
+        <input type="text" id="navSearch" placeholder="Search cars, vans, bikes..." class="flex-1 px-4 py-2 outline-none text-sm text-white bg-transparent placeholder-slate-400">
+        <div class="select-wrapper border-l border-white/15">
+          <select id="navLocation" class="px-3 py-2 text-sm text-slate-300 outline-none bg-transparent appearance-none pr-8 cursor-pointer h-full"></select>
+        </div>
+        <button onclick="performSearch()" class="bg-orange-500 text-white px-4 py-2 hover:bg-orange-600 transition-colors">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+      </div>
+
+      <div class="hidden md:flex items-center gap-3">
+        <!-- Sign In / My Account Button (Desktop) -->
+        <button id="navSignInBtn" onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>
+        <a href="myaccount.html" id="navMyAccountBtn" class="hidden text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">My Account</a>
+        
+        <a href="add.html" class="btn-primary text-sm no-underline">
+          <i class="fa-solid fa-plus"></i> Post Ad
+        </a>
+      </div>
+
+      <button class="burger md:hidden" id="burger" onclick="toggleBurger()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Side Panel -->
+<div class="panel-overlay" id="panelOverlay" onclick="closeBurger()"></div>
+<div class="side-panel" id="sidePanel">
+  <div class="flex justify-between items-center mb-8">
+    <h3 class="text-lg font-bold text-white">Menu</h3>
+    <button onclick="closeBurger()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-700 rounded-full">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="space-y-2 mb-8">
+    <input type="text" id="mobileSearch" placeholder="Search vehicles..." class="input mb-3">
+    <button onclick="performSearch()" class="w-full btn-primary justify-center">Search</button>
+  </div>
+  <div class="flex flex-col gap-1">
+    <a href="index.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
+      <i class="fa-solid fa-home w-5"></i> Home
+    </a>
+    <a href="#listings" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
+      <i class="fa-solid fa-car w-5"></i> Browse Vehicles
+    </a>
+    <a href="#video-feature" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
+      <i class="fa-solid fa-video w-5"></i> Video Ads
+    </a>
+    <!-- Sign In / My Account Button (Mobile) -->
+    <button id="mobileSignInBtn" onclick="openSignIn(); closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
+      <i class="fa-solid fa-user w-5"></i> Sign In
+    </button>
+    <a href="myaccount.html" id="mobileMyAccountBtn" class="hidden flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
+      <i class="fa-solid fa-user w-5"></i> My Account
+    </a>
+    <a href="add.html" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg bg-orange-500 text-white font-medium">
+      <i class="fa-solid fa-plus w-5"></i> Post Ad
+    </a>
+  </div>
+</div>
+
+<!-- HERO SECTION -->
+<section class="border-b border-slate-700 relative overflow-hidden">
+  <div class="absolute top-10 left-10 w-32 h-32 bg-orange-500 rounded-full opacity-10 blur-2xl"></div>
+  <div class="absolute bottom-10 right-10 w-48 h-48 bg-orange-600 rounded-full opacity-10 blur-3xl"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative z-10">
+    <div class="max-w-3xl mx-auto text-center mb-10">
+      <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
+        Find Your Perfect Vehicle in Sri Lanka
+      </h1>
+      <p class="text-slate-300 text-lg">
+        Browse thousands of cars, SUVs, and motorbikes. Now featuring <span class="text-orange-500 font-semibold">20-second video ads</span> for a better view.
+      </p>
+    </div>
+
+    <!-- Main Search Bar (Dark Glass Box) -->
+    <div class="max-w-5xl mx-auto glass-card p-4 rounded-xl">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <div class="md:col-span-6 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+          <input type="text" id="heroSearch" placeholder="Eg: Toyota Aqua, Honda Vezel..." class="input-glass pl-10" onkeydown="if(event.key==='Enter') performSearch()">
+        </div>
+        <div class="md:col-span-2 select-wrapper">
+          <select id="heroCategory" class="input-glass cursor-pointer pr-8">
+            <option>All Types</option>
+            <option>Cars</option>
+            <option>SUVs & Jeeps</option>
+            <option>Vans</option>
+            <option>Motorbikes</option>
+            <option>Three Wheelers</option>
+            <option>Lorries & Trucks</option>
+            <option>Buses</option>
+            <option>Tractors</option>
+            <option>Heavy Machinery</option>
+            <option>Spare Parts</option>
+            <option>Boats & Watercraft</option>
+            <option>Electric Vehicles</option>
+          </select>
+        </div>
+        <div class="md:col-span-2 select-wrapper">
+          <select id="heroLocation" class="input-glass cursor-pointer pr-8"></select>
+        </div>
+        <button onclick="performSearch()" class="md:col-span-2 btn-primary justify-center w-full">
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="py-12 bg-slate-800/50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl font-bold mb-6 text-white">Browse by Vehicle Type</h2>
+    <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
+      
+      <div onclick="filterByCategory('Cars')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-car text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Cars</span>
+      </div>
+      <div onclick="filterByCategory('SUVs & Jeeps')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-truck-pickup text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">SUVs & Jeeps</span>
+      </div>
+      <div onclick="filterByCategory('Vans')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-shuttle-van text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Vans</span>
+      </div>
+      <div onclick="filterByCategory('Motorbikes')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-motorcycle text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Motorbikes</span>
+      </div>
+      <div onclick="filterByCategory('Three Wheelers')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-taxi text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Three Wheelers</span>
+      </div>
+      <div onclick="filterByCategory('Lorries & Trucks')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-truck text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Lorries</span>
+      </div>
+      <div onclick="filterByCategory('Buses')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-bus text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Buses</span>
+      </div>
+      <div onclick="filterByCategory('Tractors')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-tractor text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Tractors</span>
+      </div>
+      <div onclick="filterByCategory('Heavy Machinery')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-gears text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Heavy Machinery</span>
+      </div>
+      <div onclick="filterByCategory('Spare Parts')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-screwdriver-wrench text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Spare Parts</span>
+      </div>
+      <div onclick="filterByCategory('Boats & Watercraft')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-anchor text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Boats</span>
+      </div>
+      <div onclick="filterByCategory('Electric Vehicles')" class="glass-card p-4 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-700/50 transition-all group">
+        <div class="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+          <i class="fa-solid fa-bolt text-orange-400 text-xl"></i>
+        </div><span class="text-sm font-medium text-slate-200">Electric Vehicles</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- RECENT LISTINGS (FIREBASE RTDB) -->
+<section id="listings" class="py-12 bg-slate-800/30">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h2 id="listingTitle" class="text-2xl font-bold text-white">Recent Vehicle Ads</h2>
+        <p class="text-slate-400 text-sm mt-1">Loaded directly from Firebase Realtime Database</p>
+      </div>
+      <button onclick="loadVehicles()" class="text-orange-500 font-semibold text-sm hover:underline">Reset Search</button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="vehicleGrid"></div>
+  </div>
+</section>
+
+<!-- 20-SEC VIDEO FEATURE HIGHLIGHT -->
+<section id="video-feature" class="py-16 bg-slate-900 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div>
+        <span class="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">NEW FEATURE</span>
+        <h2 class="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">
+          See Before You Buy with <span class="text-orange-400">20-Second Video Ads</span>
+        </h2>
+        <p class="text-slate-400 mb-6 text-lg">
+          Stop guessing from photos. Sellers can now upload a 20-second video clip showing the engine start, exterior condition, and interior details. 
+        </p>
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center gap-3">
+            <div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-check text-xs"></i>
+            </div><span>Real-time engine sound and performance check</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-check text-xs"></i>
+            </div><span>360-degree view of the vehicle's condition</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-check text-xs"></i>
+            </div><span>Build trust between buyers and sellers</span>
+          </li>
+        </ul>
+        <a href="add.html" class="btn-primary no-underline">
+          <i class="fa-solid fa-video"></i> Post a Video Ad
+        </a>
+      </div>
+      <div class="relative">
+        <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative group cursor-pointer">
+          <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Video Thumbnail" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+            </div>
+          </div>
+          <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-md text-sm font-medium">0:18 / 0:20</div>
+        </div>
+        <div class="absolute -bottom-4 -left-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm hidden md:block">
+          Toyota Aqua 2014
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-slate-900 border-t border-slate-700 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+      <div class="flex items-center gap-2 mb-4 md:mb-0">
+        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-car text-white text-sm"></i>
+        </div>
+        <span class="text-lg font-extrabold text-white">Car Mart</span>
+      </div>
+      <div class="flex gap-6 text-sm text-slate-400 mb-4 md:mb-0">
+        <a href="#" class="hover:text-orange-500">About Us</a>
+        <a href="#" class="hover:text-orange-500">Help & Support</a>
+        <a href="#" class="hover:text-orange-500">Terms</a>
+        <a href="#" class="hover:text-orange-500">Privacy</a>
+      </div>
+      <div class="flex gap-3">
+        <a href="#" class="w-8 h-8 border border-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:border-orange-500 hover:text-orange-500"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#" class="w-8 h-8 border border-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:border-orange-500 hover:text-orange-500"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" class="w-8 h-8 border border-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:border-orange-500 hover:text-orange-500"><i class="fa-brands fa-youtube"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- SIGN IN MODAL (Dark Glass) -->
+<div class="modal-overlay" id="signInModal" onclick="if(event.target.id==='signInModal') closeSignIn()">
+  <div class="modal glass-card">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-bold text-white">Sign In to Car Mart</h3>
+      <button onclick="closeSignIn()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
+    <form id="signInForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+        <input type="email" id="signInEmail" required placeholder="you@example.com" class="input-glass">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
+        <input type="password" id="signInPassword" required placeholder="••••••••" class="input-glass">
+      </div>
+      <div class="flex items-center justify-between text-sm">
+        <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-orange-500 focus:ring-orange-500"> Remember me</label>
+        <a href="#" class="text-orange-500 hover:underline">Forgot password?</a>
+      </div>
+      <button type="submit" class="w-full btn-primary justify-center mt-2">Sign In</button>
+      <p class="text-center text-sm text-slate-400 mt-4">
+        Don't have an account? <a href="#" class="text-orange-500 font-semibold hover:underline">Sign up free</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">Message sent!</div>
+
+<script>
+  // ===== FIREBASE CONFIGURATION =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEu-uW53mk9kaHh6Lh_qa8-M59yz_fseY",
+    authDomain: "car-mart01.firebaseapp.com",
+    databaseURL: "https://car-mart01-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "car-mart01",
+    storageBucket: "car-mart01.firebasestorage.app",
+    messagingSenderId: "257242312778",
+    appId: "1:257242312778:web:5c3e8bff7429a5f5d2b6b3",
+    measurementId: "G-MFT2YY8Y5Y"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth(); // Initialized Auth
+  const vehiclesRef = db.ref('vehicles');
+
+  // ===== 25 DISTRICTS OF SRI LANKA =====
+  const districts = [
+    "All Sri Lanka", "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", "Nuwara Eliya",
+    "Galle", "Matara", "Hambantota", "Jaffna", "Kilinochchi", "Mannar", "Vavuniya", 
+    "Mullaitivu", "Batticaloa", "Ampara", "Trincomalee", "Kurunegala", "Puttalam",
+    "Anuradhapura", "Polonnaruwa", "Badulla", "Monaragala", "Ratnapura", "Kegalle"
+  ];
+
+  function populateLocations() {
+    const navLoc = document.getElementById('navLocation');
+    const heroLoc = document.getElementById('heroLocation');
+    districts.forEach(d => {
+      navLoc.innerHTML += `<option value="${d}">${d}</option>`;
+      heroLoc.innerHTML += `<option value="${d}">${d}</option>`;
+    });
+  }
+
+  // ===== UI INTERACTIONS =====
+  function toggleBurger() {
+    document.getElementById('burger').classList.toggle('open');
+    document.getElementById('sidePanel').classList.toggle('open');
+    document.getElementById('panelOverlay').classList.toggle('open');
+  }
+  function closeBurger() {
+    document.getElementById('burger').classList.remove('open');
+    document.getElementById('sidePanel').classList.remove('open');
+    document.getElementById('panelOverlay').classList.remove('open');
+  }
+  function openSignIn() { document.getElementById('signInModal').classList.add('open'); }
+  function closeSignIn() { document.getElementById('signInModal').classList.remove('open'); }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ===== FIREBASE AUTHENTICATION =====
+  // Listen for auth state changes
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      // User is signed in
+      document.getElementById('navSignInBtn').classList.add('hidden');
+      document.getElementById('navMyAccountBtn').classList.remove('hidden');
+      document.getElementById('mobileSignInBtn').classList.add('hidden');
+      document.getElementById('mobileMyAccountBtn').classList.remove('hidden');
+      document.getElementById('mobileMyAccountBtn').classList.add('flex');
+    } else {
+      // User is signed out
+      document.getElementById('navSignInBtn').classList.remove('hidden');
+      document.getElementById('navMyAccountBtn').classList.add('hidden');
+      document.getElementById('mobileSignInBtn').classList.remove('hidden');
+      document.getElementById('mobileMyAccountBtn').classList.add('hidden');
+      document.getElementById('mobileMyAccountBtn').classList.remove('flex');
+    }
+  });
+
+  // Sign In Form Submit
+  document.getElementById('signInForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('signInEmail').value;
+    const password = document.getElementById('signInPassword').value;
+    
+    try {
+      // Try to sign in
+      await auth.signInWithEmailAndPassword(email, password);
+      closeSignIn();
+      showToast("Signed in successfully! Welcome back.");
+    } catch (error) {
+      // If user doesn't exist, create the account (store him in Firebase)
+      if (error.code === 'auth/user-not-found') {
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          closeSignIn();
+          showToast("Account created & signed in successfully!");
+        } catch (signUpError) {
+          showToast("Error: " + signUpError.message);
+        }
+      } else {
+        showToast("Error: " + error.message);
+      }
+    }
+  });
+
+  // ===== DATA LOADING & SEARCHING =====
+
+  function renderListings(vehicles) {
+    const grid = document.getElementById('vehicleGrid');
+    if (vehicles.length === 0) {
+      grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500">No vehicles found.</div>';
+      return;
+    }
+    grid.innerHTML = vehicles.map(v => `
+      <div class="vehicle-card cursor-pointer" onclick="window.location.href='addopen.html?id=${v.id}&type=${encodeURIComponent(v.vehicleType)}'">
+        <div class="relative overflow-hidden h-48">
+          <img src="${v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image'}" alt="${v.title}" class="w-full h-full object-cover">
+          ${v.hasVideo ? ` 
+            <div class="absolute top-3 left-3">
+              <span class="video-badge"><i class="fa-solid fa-play"></i> Video Ad</span>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-12 h-12 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white">
+                <i class="fa-solid fa-play text-white ml-0.5"></i>
+              </div>
+            </div>
+          ` : ''}
+          <div class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-slate-700 hover:bg-white hover:text-red-500 transition-colors">
+            <i class="fa-regular fa-heart text-sm"></i>
+          </div>
+        </div>
+        <div class="p-4">
+          <h3 class="font-bold text-slate-900 truncate">${v.title || 'Untitled Vehicle'}</h3>
+          <p class="text-orange-500 font-extrabold text-lg mt-1">Rs ${Number(v.price || 0).toLocaleString()}</p>
+          <div class="flex items-center justify-between text-xs text-slate-500 mt-3 pt-3 border-t border-slate-100">
+            <span><i class="fa-solid fa-location-dot mr-1"></i>${v.location || 'Sri Lanka'}</span>
+            <span>${v.time || 'Recently'}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Fetch Recent Ads (Newly updated first)
+  async function loadVehicles() {
+    document.getElementById('listingTitle').innerText = "Recent Vehicle Ads";
+    const grid = document.getElementById('vehicleGrid');
+    grid.innerHTML = Array(8).fill().map(() => `
+      <div class="vehicle-card">
+        <div class="skeleton h-48 w-full"></div>
+        <div class="p-4 space-y-3">
+          <div class="skeleton h-4 w-3/4"></div>
+          <div class="skeleton h-6 w-1/2"></div>
+          <div class="skeleton h-3 w-full mt-4"></div>
+        </div>
+      </div>
+    `).join('');
+
+    try {
+      const snapshot = await vehiclesRef.once('value');
+      const data = [];
+      snapshot.forEach(typeGroup => {
+        typeGroup.forEach(ad => {
+          const val = ad.val();
+          if (val.title) {
+            val.time = val.createdAt ? getTimeAgo(val.createdAt) : "Recently";
+            val.id = ad.key;
+            data.push(val);
+          }
+        });
+      });
+      data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      renderListings(data.slice(0, 20));
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+      grid.innerHTML = `<div class="col-span-full text-center py-10 text-red-500">Error loading data. Check console.</div>`;
+    }
+  }
+
+  // Search Ads
+  async function performSearch() {
+    const query = (document.getElementById('heroSearch')?.value || document.getElementById('navSearch')?.value || document.getElementById('mobileSearch')?.value || '').trim().toLowerCase();
+    const locationVal = document.getElementById('heroLocation')?.value || 'All Sri Lanka';
+    
+    if(query === '' && locationVal === 'All Sri Lanka') {
+      showToast("Please enter a search term or select a location");
+      return;
+    }
+
+    document.getElementById('listingTitle').innerText = `Search Results`;
+    const grid = document.getElementById('vehicleGrid');
+    grid.innerHTML = Array(4).fill().map(() => `
+      <div class="vehicle-card">
+        <div class="skeleton h-48 w-full"></div>
+        <div class="p-4 space-y-3">
+          <div class="skeleton h-4 w-3/4"></div>
+          <div class="skeleton h-6 w-1/2"></div>
+        </div>
+      </div>
+    `).join('');
+
+    try {
+      const snapshot = await vehiclesRef.once('value');
+      const allVehicles = [];
+      snapshot.forEach(typeGroup => {
+        typeGroup.forEach(ad => {
+          const val = ad.val();
+          if (val.title) {
+            const matchesQuery = query === '' || val.title.toLowerCase().includes(query);
+            const matchesLocation = locationVal === 'All Sri Lanka' || val.location === locationVal;
+            
+            if (matchesQuery && matchesLocation) {
+              val.time = val.createdAt ? getTimeAgo(val.createdAt) : "Recently";
+              val.id = ad.key;
+              allVehicles.push(val);
+            }
+          }
+        });
+      });
+
+      allVehicles.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      
+      showToast(`Found ${allVehicles.length} vehicles matching your search`);
+      document.getElementById('listings').scrollIntoView({behavior: 'smooth'});
+      renderListings(allVehicles);
+
+    } catch (error) {
+      console.error("Search error:", error);
+      grid.innerHTML = '<div class="col-span-full text-center py-10 text-red-500">Error searching. Check console.</div>';
+    }
+  }
+
+  // Filter by Category
+  async function filterByCategory(category) {
+    document.getElementById('listingTitle').innerText = category + " Ads";
+    const grid = document.getElementById('vehicleGrid');
+    grid.innerHTML = Array(8).fill().map(() => `
+      <div class="vehicle-card">
+        <div class="skeleton h-48 w-full"></div>
+        <div class="p-4 space-y-3">
+          <div class="skeleton h-4 w-3/4"></div>
+          <div class="skeleton h-6 w-1/2"></div>
+          <div class="skeleton h-3 w-full mt-4"></div>
+        </div>
+      </div>
+    `).join('');
+
+    try {
+      const snapshot = await vehiclesRef.child(category).once('value');
+      const filteredVehicles = [];
+      snapshot.forEach(ad => {
+        const val = ad.val();
+        if (val.title) {
+          val.time = val.createdAt ? getTimeAgo(val.createdAt) : "Recently";
+          val.id = ad.key;
+          filteredVehicles.push(val);
+        }
+      });
+
+      filteredVehicles.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      
+      showToast(`Found ${filteredVehicles.length} vehicles in ${category}`);
+      document.getElementById('listings').scrollIntoView({behavior: 'smooth'});
+      renderListings(filteredVehicles);
+
+    } catch (error) {
+      console.error("Category filter error:", error);
+      grid.innerHTML = '<div class="col-span-full text-center py-10 text-red-500">Error filtering. Check console.</div>';
+    }
+  }
+
+  function getTimeAgo(timestamp) {
+    const ts = typeof timestamp === 'number' ? timestamp : 0;
+    if(ts === 0) return "Recently";
+    const seconds = Math.floor((Date.now() - ts) / 1000);
+    if (seconds < 60) return "Just now";
+    if (seconds < 3600) return `${Math.floor(seconds/60)} mins ago`;
+    if (seconds < 86400) return `${Math.floor(seconds/3600)} hours ago`;
+    if (seconds < 604800) return `${Math.floor(seconds/86400)} days ago`;
+    return new Date(ts).toLocaleDateString();
+  }
+
+  // Initialize on load
+  window.onload = function() {
+    populateLocations();
+    loadVehicles();
+  };
+</script>
+
+</body>
+</html>

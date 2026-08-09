@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>View Vehicle Ad - Car Mart</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+  :root {
+    --primary: #f97316; /* Orange */
+    --primary-dark: #ea580c;
+    --white: #ffffff;
+    --dark-bg: #0f172a;
+  }
+  
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  html { scroll-behavior: smooth; }
+  
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #f8fafc; /* Clean white/slate background */
+    color: var(--dark-bg);
+    margin: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Dark Glassmorphism Box Style */
+  .glass-card {
+    background: rgba(15, 23, 42, 0.75); /* Dark slate glass tint */
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.15);
+    color: var(--white);
+  }
+
+  /* Navbar Specific Glass */
+  .nav-glass {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+
+  /* Buttons */
+  .btn-primary, .btn-outline {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    font-size: 0.95rem;
+  }
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--white);
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+  }
+  .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  
+  .btn-outline {
+    background-color: transparent;
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .btn-outline:hover { background-color: rgba(255, 255, 255, 0.1); border-color: var(--primary); }
+
+  /* Burger Menu */
+  .burger { width: 28px; height: 20px; position: relative; cursor: pointer; background: transparent; border: none; padding: 0; }
+  .burger span { display: block; position: absolute; height: 3px; width: 100%; background: var(--white); border-radius: 2px; transition: all 0.3s ease; }
+  .burger span:nth-child(1) { top: 0; }
+  .burger span:nth-child(2) { top: 8px; }
+  .burger span:nth-child(3) { top: 16px; }
+  .burger.open span:nth-child(1) { top: 8px; transform: rotate(45deg); background: var(--primary); }
+  .burger.open span:nth-child(2) { opacity: 0; }
+  .burger.open span:nth-child(3) { top: 8px; transform: rotate(-45deg); background: var(--primary); }
+
+  /* Side Panel */
+  .side-panel {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 320px; max-width: 85vw;
+    background: var(--white); box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+    transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100; padding: 24px; overflow-y: auto; padding-top: max(24px, env(safe-area-inset-top));
+  }
+  .side-panel.open { transform: translateX(0); }
+  .panel-overlay {
+    position: fixed; inset: 0; background: rgba(17, 24, 39, 0.4);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 99;
+  }
+  .panel-overlay.open { opacity: 1; pointer-events: all; }
+
+  /* Gallery Styles */
+  .main-media {
+    width: 100%; aspect-ratio: 16/9; background: var(--dark-bg); border-radius: 12px;
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .main-media img, .main-media video {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .thumbnail {
+    width: 100%; aspect-ratio: 1/1; background: #e2e8f0; border-radius: 8px;
+    overflow: hidden; cursor: pointer; border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .thumbnail.active { border-color: var(--primary); }
+  .thumbnail:hover { border-color: var(--primary-dark); }
+  .thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+  .thumbnail.video-thumb { background: var(--dark-bg); display: flex; align-items: center; justify-content: center; color: white; flex-direction: column; gap: 4px; }
+  
+  .spec-item {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 14px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s;
+  }
+  .spec-item:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.08); }
+  .spec-icon { color: var(--primary); font-size: 18px; margin-bottom: 4px; }
+
+  /* Skeleton Loader */
+  .skeleton {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s infinite;
+  }
+  .glass-card .skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--dark-bg); color: var(--white);
+    padding: 12px 24px; border-radius: 8px; z-index: 300;
+    font-weight: 500; transition: transform 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    width: max-content; max-width: 90vw;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Accessibility Focus States */
+  button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- NAVBAR -->
+<nav class="glass-card sticky top-0 z-50 nav-glass">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 gap-4">
+      
+      <a href="index.html" class="flex items-center gap-2 flex-shrink-0" aria-label="Go to homepage">
+        <div class="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-car text-white" aria-hidden="true"></i>
+        </div>
+        <span class="text-xl font-extrabold tracking-tight text-white">Car Mart</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-3">
+        <a href="index.html" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to Listings
+        </a>
+        <a href="add.html" class="btn-primary text-sm no-underline" style="width: auto;">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Post Ad
+        </a>
+      </div>
+
+      <button class="burger md:hidden" id="burger" onclick="toggleBurger()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="sidePanel">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Side Panel -->
+<div class="panel-overlay" id="panelOverlay" onclick="closeBurger()" aria-hidden="true"></div>
+<aside class="side-panel" id="sidePanel" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+  <div class="flex justify-between items-center mb-8">
+    <h3 id="menuTitle" class="text-lg font-bold">Menu</h3>
+    <button onclick="closeBurger()" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full" aria-label="Close menu">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="flex flex-col gap-1">
+    <a href="index.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-500 font-medium transition-colors">
+      <i class="fa-solid fa-home w-5" aria-hidden="true"></i> Home
+    </a>
+    <a href="add.html" class="flex items-center gap-3 p-3 rounded-lg bg-orange-500 text-white font-medium">
+      <i class="fa-solid fa-plus w-5" aria-hidden="true"></i> Post Ad
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  
+  <!-- Loading Skeleton -->
+  <div id="loadingState" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="space-y-4">
+      <div class="skeleton h-[250px] md:h-[400px] rounded-xl"></div>
+      <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+        <div class="skeleton aspect-square rounded-lg"></div>
+        <div class="skeleton aspect-square rounded-lg"></div>
+        <div class="skeleton aspect-square rounded-lg"></div>
+        <div class="skeleton aspect-square rounded-lg"></div>
+        <div class="skeleton aspect-square rounded-lg hidden sm:block"></div>
+        <div class="skeleton aspect-square rounded-lg hidden sm:block"></div>
+        <div class="skeleton aspect-square rounded-lg hidden sm:block"></div>
+      </div>
+    </div>
+    <div class="glass-card p-6 md:p-8 rounded-xl space-y-6">
+      <div class="skeleton h-8 w-3/4 rounded"></div>
+      <div class="skeleton h-6 w-1/4 rounded"></div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div class="skeleton h-16 rounded-lg"></div><div class="skeleton h-16 rounded-lg"></div>
+        <div class="skeleton h-16 rounded-lg"></div><div class="skeleton h-16 rounded-lg"></div>
+        <div class="skeleton h-16 rounded-lg"></div><div class="skeleton h-16 rounded-lg"></div>
+      </div>
+      <div class="skeleton h-24 rounded-lg"></div>
+    </div>
+  </div>
+
+  <!-- Actual Content -->
+  <div id="adContent" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- Left Column: Media Gallery -->
+    <section class="space-y-4" aria-label="Vehicle Media Gallery">
+      <div class="main-media" id="mainMedia">
+          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Vehicle primary view">
+      </div>
+      
+      <!-- Thumbnails -->
+      <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+        <button class="thumbnail active" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 1">
+          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 1" loading="lazy">
+        </button>
+        <button class="thumbnail" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 2">
+          <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 2" loading="lazy">
+        </button>
+        <button class="thumbnail" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 3">
+          <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 3" loading="lazy">
+        </button>
+        <button class="thumbnail" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 4">
+          <img src="https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 4" loading="lazy">
+        </button>
+        <button class="thumbnail hidden sm:block" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 5">
+          <img src="https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 5" loading="lazy">
+        </button>
+        <button class="thumbnail hidden sm:block" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 6">
+          <img src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 6" loading="lazy">
+        </button>
+        <button class="thumbnail video-thumb hidden sm:flex" onclick="changeMedia('video', 'https://www.w3schools.com/html/mov_bbb.mp4', this)" aria-label="Play video">
+          <i class="fa-solid fa-play text-xl" aria-hidden="true"></i>
+          <span class="text-[10px] font-semibold">0:20</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Right Column: Ad Details -->
+    <section class="glass-card p-6 md:p-8 rounded-xl self-start" aria-label="Vehicle Details">
+      <div class="flex justify-between items-start mb-4 gap-4 flex-wrap">
+        <div class="flex-1 min-w-0">
+          <h1 id="adTitle" class="text-2xl md:text-3xl font-extrabold text-white mb-2 break-words">Vehicle Title</h1>
+          <p id="adLocation" class="text-slate-400 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-location-dot" aria-hidden="true"></i> Colombo, Sri Lanka
+          </p>
+        </div>
+        <div class="text-right pl-4">
+          <p id="adPrice" class="text-2xl md:text-3xl font-extrabold text-orange-500 whitespace-nowrap">Rs 0</p>
+          <p id="adTime" class="text-slate-500 text-xs mt-1">Recently added</p>
+        </div>
+      </div>
+
+      <!-- Specifications Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 my-6 md:my-8">
+        <div class="spec-item">
+          <i class="fa-solid fa-calendar-days spec-icon" aria-hidden="true"></i>
+          <span class="text-xs text-slate-400">Year</span>
+          <span id="adYear" class="font-bold text-white">2014</span>
+        </div>
+        <div class="spec-item">
+          <i class="fa-solid fa-gauge-high spec-icon" aria-hidden="true"></i>
+          <span class="text-xs text-slate-400">Mileage</span>
+          <span id="adMileage" class="font-bold text-white">100,000 km</span>
+        </div>
+        <div class="spec-item">
+          <i class="fa-solid fa-gas-pump spec-icon" aria-hidden="true"></i>
+          <span class="text-xs text-slate-400">Fuel</span>
+          <span id="adFuel" class="font-bold text-white">Hybrid</span>
+        </div>
+        <div class="spec-item">
+          <i class="fa-solid fa-engine spec-icon" aria-hidden="true"></i>
+          <span class="text-xs text-slate-400">Engine</span>
+          <span id="adCc" class="font-bold text-white">1500 cc</span>
+        </div>
+        <div class="spec-item">
+          <i class="fa-solid fa-car-side spec-icon" aria-hidden="true"></i>
+          <span class="text-xs text-slate-400">Condition</span>
+          <span id="adCondition" class="font-bold text-white">Used</span>
+        </div>
+        <div class="spec-item">
+          <i class="fa-solid fa-tag spec-icon" aria-hidden="true"></i>
+          <span class="text-xs text-slate-400">Type</span>
+          <span id="adType" class="font-bold text-white">Cars</span>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-8">
+        <h3 class="text-lg font-bold text-white mb-3 border-b border-slate-700 pb-2">Description</h3>
+        <p id="adDescription" class="text-slate-300 text-sm leading-relaxed whitespace-pre-line break-words">
+          Loading description...
+        </p>
+      </div>
+
+      <!-- Contact Actions -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button class="btn-primary" onclick="showToast('Calling seller...')" aria-label="Call Seller">
+          <i class="fa-solid fa-phone" aria-hidden="true"></i> Call Seller
+        </button>
+        <button class="btn-outline" onclick="showToast('Opening WhatsApp...')" aria-label="Contact on WhatsApp">
+          <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i> WhatsApp
+        </button>
+      </div>
+      
+      <div class="mt-6 pt-6 border-t border-slate-700 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 text-xl font-bold flex-shrink-0">U</div>
+        <div>
+          <p class="font-bold text-white">User Name</p>
+          <p class="text-xs text-slate-400">Member since 2024</p>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast" role="alert" aria-live="assertive">Action triggered!</div>
+
+<script>
+  // ===== FIREBASE REALTIME DATABASE CONFIGURATION =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEu-uW53mk9kaHh6Lh_qa8-M59yz_fseY",
+    authDomain: "car-mart01.firebaseapp.com",
+    databaseURL: "https://car-mart01-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "car-mart01",
+    storageBucket: "car-mart01.firebasestorage.app",
+    messagingSenderId: "257242312778",
+    appId: "1:257242312778:web:5c3e8bff7429a5f5d2b6b3",
+    measurementId: "G-MFT2YY8Y5Y"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ===== UI INTERACTIONS =====
+  function toggleBurger() {
+    const burger = document.getElementById('burger');
+    const panel = document.getElementById('sidePanel');
+    const overlay = document.getElementById('panelOverlay');
+    const isOpen = burger.classList.contains('open');
+    
+    burger.classList.toggle('open', !isOpen);
+    panel.classList.toggle('open', !isOpen);
+    overlay.classList.toggle('open', !isOpen);
+    burger.setAttribute('aria-expanded', !isOpen);
+    document.body.style.overflow = !isOpen ? 'hidden' : ''; // Prevent background scrolling
+  }
+
+  function closeBurger() {
+    const burger = document.getElementById('burger');
+    if (!burger.classList.contains('open')) return;
+    
+    burger.classList.remove('open');
+    document.getElementById('sidePanel').classList.remove('open');
+    document.getElementById('panelOverlay').classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    clearTimeout(t.timeoutId);
+    t.timeoutId = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ===== MEDIA GALLERY LOGIC =====
+  function changeMedia(type, src, element) {
+    const mainMedia = document.getElementById('mainMedia');
+    
+    document.querySelectorAll('.thumbnail').forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-current', 'false');
+    });
+    
+    element.classList.add('active');
+    element.setAttribute('aria-current', 'true');
+
+    if (type === 'img') {
+      mainMedia.innerHTML = `<img src="${src}" alt="Vehicle enlarged view">`;
+    } else if (type === 'video') {
+      mainMedia.innerHTML = `
+        <video controls autoplay playsinline style="width:100%; height:100%; object-fit:cover;">
+          <source src="${src}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      `;
+    }
+  }
+
+  // ===== DATA FETCHING LOGIC =====
+  async function loadAdDetails() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+    const id = urlParams.get('id');
+
+    const loadingState = document.getElementById('loadingState');
+    const adContent = document.getElementById('adContent');
+
+    if (!type || !id) {
+      loadingState.innerHTML = '<div class="col-span-full text-center py-20 text-red-500">Error: No Ad ID found in URL.</div>';
+      return;
+    }
+
+    try {
+      const adRef = db.ref(`vehicles/${type}/${id}`);
+      const snapshot = await adRef.once('value');
+      const adData = snapshot.val();
+
+      loadingState.classList.add('hidden');
+      adContent.classList.remove('hidden');
+
+      if (adData) {
+        // Safely populate DOM with fallbacks
+        document.getElementById('adTitle').innerText = adData.title || 'Untitled Vehicle';
+        document.getElementById('adPrice').innerText = `Rs ${Number(adData.price || 0).toLocaleString()}`;
+        document.getElementById('adLocation').innerHTML = `<i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${adData.location || 'Sri Lanka'}`;
+        document.getElementById('adDescription').innerText = adData.description || 'No description provided.';
+        document.getElementById('adYear').innerText = adData.year || 'N/A';
+        document.getElementById('adMileage').innerText = `${Number(adData.mileage || 0).toLocaleString()} km`;
+        document.getElementById('adFuel').innerText = adData.fuelType || 'N/A';
+        document.getElementById('adCc').innerText = `${adData.cc || 'N/A'} cc`;
+        document.getElementById('adCondition').innerText = adData.condition || 'N/A';
+        document.getElementById('adType').innerText = adData.vehicleType || type;
+        
+        if (adData.createdAt) {
+          document.getElementById('adTime').innerText = getTimeAgo(adData.createdAt);
+        }
+      } else {
+        adContent.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500">Ad not found. It may have been deleted.</div>';
+      }
+
+    } catch (error) {
+      console.error("Error fetching ad:", error);
+      loadingState.innerHTML = `<div class="col-span-full text-center py-20 text-red-500">Error loading ad. ${error.message}</div>`;
+    }
+  }
+
+  function getTimeAgo(timestamp) {
+    const ts = typeof timestamp === 'number' ? timestamp : 0;
+    if(ts === 0) return "Recently";
+    
+    const seconds = Math.floor((Date.now() - ts) / 1000);
+    if (seconds < 60) return "Just now";
+    if (seconds < 3600) return `${Math.floor(seconds/60)} mins ago`;
+    if (seconds < 86400) return `${Math.floor(seconds/3600)} hours ago`;
+    if (seconds < 604800) return `${Math.floor(seconds/86400)} days ago`;
+    return new Date(ts).toLocaleDateString();
+  }
+
+  // Initialize on DOMContentLoaded for faster execution
+  document.addEventListener('DOMContentLoaded', loadAdDetails);
+</script>
+
+</body>
+</html>
