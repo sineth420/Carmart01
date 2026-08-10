@@ -579,20 +579,31 @@
     }, 3000);
   }
 
-  // ===== AUTH LOGIC =====
+    // ===== AUTH LOGIC =====
   document.getElementById('signInForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     try {
+      // 1. පළමුව Login වීමට උත්සාහ කරයි
       await auth.signInWithEmailAndPassword(email, password);
       closeSignIn();
       showToast("Signed in successfully!");
     } catch (error) {
-      if (error.code === 'auth/user-not-found') {
-        await auth.createUserWithEmailAndPassword(email, password);
-        closeSignIn();
-        showToast("Account created successfully!");
+      // 2. ගිණුම නැතිනම් හෝ අක්තපත්‍ර වැරදි නම්, අලුත් ගිණුමක් සෑදීමට උත්සාහ කරයි
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          closeSignIn();
+          showToast("Account created successfully!");
+        } catch (createError) {
+          // 3. ගිණුම දැනටමත් ඇති නම් (Password එක වැරදී ඇත)
+          if (createError.code === 'auth/email-already-in-use') {
+            showToast("Error: Incorrect password. Please try again.");
+          } else {
+            showToast("Error: " + createError.message);
+          }
+        }
       } else {
         showToast("Error: " + error.message);
       }
