@@ -12,7 +12,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, set, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
   // Your exact Firebase configuration + databaseURL
   const firebaseConfig = {
@@ -35,9 +35,10 @@
   window.db = db;
   window.dbRef = ref;
   window.dbSet = set;
-  window.dbGet = get; // Added get function to fetch user name
+  window.dbGet = get; 
   window.dbServerTimestamp = serverTimestamp;
   window.auth = auth;
+  window.onAuthStateChanged = onAuthStateChanged; // Expose onAuthStateChanged
 </script>
 
 <style>
@@ -48,16 +49,14 @@
   * { box-sizing: border-box; }
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    /* Clean white/slate background */
     background-color: #f8fafc;
     color: #0f172a; 
     margin: 0;
     min-height: 100vh;
   }
 
-  /* Dark Glassmorphism Box Style */
   .glass-card {
-    background: rgba(15, 23, 42, 0.75); /* Dark slate glass tint */
+    background: rgba(15, 23, 42, 0.75); 
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -81,11 +80,11 @@
     border: none;
     width: 100%;
     font-size: 16px;
+    text-decoration: none;
   }
   .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
   .btn-primary:disabled { background-color: #475569; cursor: not-allowed; transform: none; box-shadow: none; }
 
-  /* Inputs adapted for dark glass background */
   .input {
     width: 100%; padding: 12px 16px; 
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -104,7 +103,6 @@
   }
   select.input option { background: #1e293b; color: #ffffff; }
 
-  /* Media Upload Styles */
   .media-upload-box {
     aspect-ratio: 1/1;
     border: 2px dashed rgba(255, 255, 255, 0.2);
@@ -138,7 +136,7 @@
   }
 
   .loading-overlay {
-    position: fixed; inset: 0; background: rgba(248, 250, 252, 0.8); /* Matching clean white background */
+    position: fixed; inset: 0; background: rgba(248, 250, 252, 0.8);
     backdrop-filter: blur(8px); z-index: 1000;
     display: none; align-items: center; justify-content: center; flex-direction: column;
     color: #0f172a;
@@ -170,7 +168,7 @@
 </head>
 <body class="antialiased">
 
-<!-- NAVBAR (Dark Glassmorphism to match boxes) -->
+<!-- NAVBAR -->
 <nav class="glass-card sticky top-0 z-50" style="border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16 gap-4">
@@ -189,190 +187,202 @@
 
 <!-- MAIN CONTENT -->
 <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <div class="mb-8">
-    <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Post Your Vehicle Ad</h1>
-    <p class="text-slate-700">Fill in the details below. Fields marked with * are required.</p>
+  
+  <!-- Access Denied Message (Shown if not logged in) -->
+  <div id="notLoggedInMsg" class="glass-card p-8 text-center" style="display: none;">
+    <i class="fa-solid fa-lock text-4xl text-orange-500 mb-4"></i>
+    <h2 class="text-2xl font-bold text-white mb-3">Access Denied</h2>
+    <p class="text-slate-300 mb-6">You must be logged in to post an advertisement. Please go back to the homepage and sign in.</p>
+    <a href="index.html" class="btn-primary" style="width: auto; margin: 0 auto;">
+      <i class="fa-solid fa-house"></i> Go to Homepage
+    </a>
   </div>
 
-  <form id="adForm" class="space-y-8">
-    
-    <!-- Section 1: Basic Details (Dark Glass) -->
-    <div class="glass-card p-6 rounded-xl space-y-4">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-info-circle text-orange-500"></i> Basic Details</h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Vehicle Type *</label>
-          <select id="vehicleType" required class="input">
-            <option value="">Select Type</option>
-            <option>Cars</option>
-            <option>SUVs & Jeeps</option>
-            <option>Vans</option>
-            <option>Motorbikes</option>
-            <option>Three Wheelers</option>
-            <option>Lorries & Trucks</option>
-            <option>Buses</option>
-            <option>Tractors</option>
-            <option>Heavy Machinery</option>
-            <option>Spare Parts</option>
-            <option>Boats & Watercraft</option>
-            <option>Electric Vehicles</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Brand / Model *</label>
-          <input type="text" id="brand" required placeholder="Eg: Toyota Aqua 2014" class="input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">District *</label>
-          <select id="district" required class="input">
-            <option value="">Select District</option>
-            <option>Colombo</option><option>Gampaha</option><option>Kalutara</option><option>Kandy</option>
-            <option>Matale</option><option>Nuwara Eliya</option><option>Galle</option><option>Matara</option>
-            <option>Hambantota</option><option>Jaffna</option><option>Kilinochchi</option><option>Mannar</option>
-            <option>Vavuniya</option><option>Mullaitivu</option><option>Batticaloa</option><option>Ampara</option>
-            <option>Trincomalee</option><option>Kurunegala</option><option>Puttalam</option><option>Anuradhapura</option>
-            <option>Polonnaruwa</option><option>Badulla</option><option>Monaragala</option><option>Ratnapura</option>
-            <option>Kegalle</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Price (Rs) *</label>
-          <input type="number" id="price" required placeholder="Eg: 4850000" class="input">
-        </div>
-      </div>
+  <!-- Loading State for Auth Check -->
+  <div id="checkingAuthState" class="text-center py-20 text-slate-700">
+    <i class="fa-solid fa-spinner fa-spin text-3xl text-orange-500 mb-3"></i>
+    <p>Checking login status...</p>
+  </div>
 
-      <div>
-        <label class="block text-sm font-medium text-slate-300 mb-1">Description *</label>
-        <textarea id="description" rows="4" required placeholder="Mention condition, mileage history, features..." class="input"></textarea>
-      </div>
+  <!-- Ad Form (Hidden until auth is confirmed) -->
+  <div id="formContainer" style="display: none;">
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Post Your Vehicle Ad</h1>
+      <p class="text-slate-700">Fill in the details below. Fields marked with * are required.</p>
     </div>
 
-    <!-- Section 2: Specifications (Dark Glass) -->
-    <div class="glass-card p-6 rounded-xl space-y-4">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gauge-high text-orange-500"></i> Specifications</h2>
+    <form id="adForm" class="space-y-8">
       
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Engine Capacity (cc)</label>
-          <input type="number" id="cc" placeholder="Eg: 1500" class="input">
+      <!-- Section 1: Basic Details -->
+      <div class="glass-card p-6 rounded-xl space-y-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-info-circle text-orange-500"></i> Basic Details</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Vehicle Type *</label>
+            <select id="vehicleType" required class="input">
+              <option value="">Select Type</option>
+              <option>Cars</option>
+              <option>SUVs & Jeeps</option>
+              <option>Vans</option>
+              <option>Motorbikes</option>
+              <option>Three Wheelers</option>
+              <option>Lorries & Trucks</option>
+              <option>Buses</option>
+              <option>Tractors</option>
+              <option>Heavy Machinery</option>
+              <option>Spare Parts</option>
+              <option>Boats & Watercraft</option>
+              <option>Electric Vehicles</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Brand / Model *</label>
+            <input type="text" id="brand" required placeholder="Eg: Toyota Aqua 2014" class="input">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">District *</label>
+            <select id="district" required class="input">
+              <option value="">Select District</option>
+              <option>Colombo</option><option>Gampaha</option><option>Kalutara</option><option>Kandy</option>
+              <option>Matale</option><option>Nuwara Eliya</option><option>Galle</option><option>Matara</option>
+              <option>Hambantota</option><option>Jaffna</option><option>Kilinochchi</option><option>Mannar</option>
+              <option>Vavuniya</option><option>Mullaitivu</option><option>Batticaloa</option><option>Ampara</option>
+              <option>Trincomalee</option><option>Kurunegala</option><option>Puttalam</option><option>Anuradhapura</option>
+              <option>Polonnaruwa</option><option>Badulla</option><option>Monaragala</option><option>Ratnapura</option>
+              <option>Kegalle</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Price (Rs) *</label>
+            <input type="number" id="price" required placeholder="Eg: 4850000" class="input">
+          </div>
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Year of Manufacture *</label>
-          <input type="number" id="year" required placeholder="Eg: 2014" class="input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Mileage (km)</label>
-          <input type="number" id="mileage" placeholder="Eg: 100000" class="input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Fuel Type *</label>
-          <select id="fuelType" required class="input">
-            <option value="">Select Fuel</option>
-            <option>Petrol</option>
-            <option>Diesel</option>
-            <option>Hybrid</option>
-            <option>Electric</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Condition *</label>
-          <select id="condition" required class="input">
-            <option value="">Select Condition</option>
-            <option>Brand New</option>
-            <option>Used</option>
-            <option>Reconditioned</option>
-          </select>
+          <label class="block text-sm font-medium text-slate-300 mb-1">Description *</label>
+          <textarea id="description" rows="4" required placeholder="Mention condition, mileage history, features..." class="input"></textarea>
         </div>
       </div>
-    </div>
 
-    <!-- Section 3: Contact Details (Dark Glass) -->
-    <div class="glass-card p-6 rounded-xl space-y-4">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-address-book text-orange-500"></i> Contact Details</h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">Mobile Number *</label>
-          <input type="tel" id="mobileNumber" required placeholder="Eg: 0771234567" class="input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1">WhatsApp Number</label>
-          <input type="tel" id="whatsappNumber" placeholder="Leave empty if same as mobile" class="input">
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 4: Media Upload (Dark Glass) -->
-    <div class="glass-card p-6 rounded-xl space-y-4">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-images text-orange-500"></i> Media Upload</h2>
-      <p class="text-sm text-slate-400">Upload up to 6 images and 1 video (max 20 seconds).</p>
-      
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        <!-- Image 1 -->
-        <div class="media-upload-box" onclick="document.getElementById('img1').click()">
-          <input type="file" id="img1" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
-          <div class="upload-placeholder" id="prev-img1">
-            <i class="fa-solid fa-image text-2xl text-slate-500"></i>
-            <span class="text-xs text-slate-400 mt-2">Image 1</span>
+      <!-- Section 2: Specifications -->
+      <div class="glass-card p-6 rounded-xl space-y-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gauge-high text-orange-500"></i> Specifications</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Engine Capacity (cc)</label>
+            <input type="number" id="cc" placeholder="Eg: 1500" class="input">
           </div>
-        </div>
-        <!-- Image 2 -->
-        <div class="media-upload-box" onclick="document.getElementById('img2').click()">
-          <input type="file" id="img2" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
-          <div class="upload-placeholder" id="prev-img2">
-            <i class="fa-solid fa-image text-2xl text-slate-500"></i>
-            <span class="text-xs text-slate-400 mt-2">Image 2</span>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Year of Manufacture *</label>
+            <input type="number" id="year" required placeholder="Eg: 2014" class="input">
           </div>
-        </div>
-        <!-- Image 3 -->
-        <div class="media-upload-box" onclick="document.getElementById('img3').click()">
-          <input type="file" id="img3" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
-          <div class="upload-placeholder" id="prev-img3">
-            <i class="fa-solid fa-image text-2xl text-slate-500"></i>
-            <span class="text-xs text-slate-400 mt-2">Image 3</span>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Mileage (km)</label>
+            <input type="number" id="mileage" placeholder="Eg: 100000" class="input">
           </div>
-        </div>
-        <!-- Image 4 -->
-        <div class="media-upload-box" onclick="document.getElementById('img4').click()">
-          <input type="file" id="img4" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
-          <div class="upload-placeholder" id="prev-img4">
-            <i class="fa-solid fa-image text-2xl text-slate-500"></i>
-            <span class="text-xs text-slate-400 mt-2">Image 4</span>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Fuel Type *</label>
+            <select id="fuelType" required class="input">
+              <option value="">Select Fuel</option>
+              <option>Petrol</option>
+              <option>Diesel</option>
+              <option>Hybrid</option>
+              <option>Electric</option>
+            </select>
           </div>
-        </div>
-        <!-- Image 5 -->
-        <div class="media-upload-box" onclick="document.getElementById('img5').click()">
-          <input type="file" id="img5" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
-          <div class="upload-placeholder" id="prev-img5">
-            <i class="fa-solid fa-image text-2xl text-slate-500"></i>
-            <span class="text-xs text-slate-400 mt-2">Image 5</span>
-          </div>
-        </div>
-        <!-- Image 6 -->
-        <div class="media-upload-box" onclick="document.getElementById('img6').click()">
-          <input type="file" id="img6" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
-          <div class="upload-placeholder" id="prev-img6">
-            <i class="fa-solid fa-image text-2xl text-slate-500"></i>
-            <span class="text-xs text-slate-400 mt-2">Image 6</span>
-          </div>
-        </div>
-        <!-- Video -->
-        <div class="media-upload-box" onclick="document.getElementById('vid1').click()">
-          <input type="file" id="vid1" accept="video/*" class="hidden" onchange="previewMedia(this, 'video')">
-          <div class="upload-placeholder" id="prev-vid1">
-            <i class="fa-solid fa-film text-2xl text-slate-500"></i>
-            <span class="text-xs text-slate-400 mt-2">Video (Max 20s)</span>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Condition *</label>
+            <select id="condition" required class="input">
+              <option value="">Select Condition</option>
+              <option>Brand New</option>
+              <option>Used</option>
+              <option>Reconditioned</option>
+            </select>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Submit Button -->
-    <button type="submit" id="submitBtn" class="btn-primary text-lg">
-      <i class="fa-solid fa-paper-plane"></i> Publish Ad
-    </button>
-  </form>
+      <!-- Section 3: Contact Details -->
+      <div class="glass-card p-6 rounded-xl space-y-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-address-book text-orange-500"></i> Contact Details</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Mobile Number *</label>
+            <input type="tel" id="mobileNumber" required placeholder="Eg: 0771234567" class="input">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">WhatsApp Number</label>
+            <input type="tel" id="whatsappNumber" placeholder="Leave empty if same as mobile" class="input">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Media Upload -->
+      <div class="glass-card p-6 rounded-xl space-y-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-images text-orange-500"></i> Media Upload</h2>
+        <p class="text-sm text-slate-400">Upload up to 6 images and 1 video (max 20 seconds).</p>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div class="media-upload-box" onclick="document.getElementById('img1').click()">
+            <input type="file" id="img1" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
+            <div class="upload-placeholder" id="prev-img1">
+              <i class="fa-solid fa-image text-2xl text-slate-500"></i>
+              <span class="text-xs text-slate-400 mt-2">Image 1</span>
+            </div>
+          </div>
+          <div class="media-upload-box" onclick="document.getElementById('img2').click()">
+            <input type="file" id="img2" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
+            <div class="upload-placeholder" id="prev-img2">
+              <i class="fa-solid fa-image text-2xl text-slate-500"></i>
+              <span class="text-xs text-slate-400 mt-2">Image 2</span>
+            </div>
+          </div>
+          <div class="media-upload-box" onclick="document.getElementById('img3').click()">
+            <input type="file" id="img3" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
+            <div class="upload-placeholder" id="prev-img3">
+              <i class="fa-solid fa-image text-2xl text-slate-500"></i>
+              <span class="text-xs text-slate-400 mt-2">Image 3</span>
+            </div>
+          </div>
+          <div class="media-upload-box" onclick="document.getElementById('img4').click()">
+            <input type="file" id="img4" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
+            <div class="upload-placeholder" id="prev-img4">
+              <i class="fa-solid fa-image text-2xl text-slate-500"></i>
+              <span class="text-xs text-slate-400 mt-2">Image 4</span>
+            </div>
+          </div>
+          <div class="media-upload-box" onclick="document.getElementById('img5').click()">
+            <input type="file" id="img5" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
+            <div class="upload-placeholder" id="prev-img5">
+              <i class="fa-solid fa-image text-2xl text-slate-500"></i>
+              <span class="text-xs text-slate-400 mt-2">Image 5</span>
+            </div>
+          </div>
+          <div class="media-upload-box" onclick="document.getElementById('img6').click()">
+            <input type="file" id="img6" accept="image/*" class="hidden" onchange="previewMedia(this, 'img')">
+            <div class="upload-placeholder" id="prev-img6">
+              <i class="fa-solid fa-image text-2xl text-slate-500"></i>
+              <span class="text-xs text-slate-400 mt-2">Image 6</span>
+            </div>
+          </div>
+          <div class="media-upload-box" onclick="document.getElementById('vid1').click()">
+            <input type="file" id="vid1" accept="video/*" class="hidden" onchange="previewMedia(this, 'video')">
+            <div class="upload-placeholder" id="prev-vid1">
+              <i class="fa-solid fa-film text-2xl text-slate-500"></i>
+              <span class="text-xs text-slate-400 mt-2">Video (Max 20s)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn-primary text-lg">
+        <i class="fa-solid fa-paper-plane"></i> Publish Ad
+      </button>
+    </form>
+  </div>
 </main>
 
 <!-- Loading Overlay -->
@@ -386,6 +396,25 @@
 <div class="toast" id="toast">Ad published successfully!</div>
 
 <script>
+  // Auth State Listener: Hide form and show error if not logged in
+  window.onAuthStateChanged(window.auth, (user) => {
+    const checkingState = document.getElementById('checkingAuthState');
+    const formContainer = document.getElementById('formContainer');
+    const notLoggedInMsg = document.getElementById('notLoggedInMsg');
+
+    if (user) {
+      // User is logged in, show the form
+      checkingState.style.display = 'none';
+      notLoggedInMsg.style.display = 'none';
+      formContainer.style.display = 'block';
+    } else {
+      // User is not logged in, show access denied
+      checkingState.style.display = 'none';
+      formContainer.style.display = 'none';
+      notLoggedInMsg.style.display = 'block';
+    }
+  });
+
   // Media Preview and Validation Logic
   function previewMedia(input, type) {
     const file = input.files[0];
@@ -395,7 +424,6 @@
     const previewBox = document.getElementById(previewId);
     
     if (type === 'video') {
-      // Check video duration
       const video = document.createElement('video');
       video.preload = 'metadata';
       video.onloadedmetadata = function() {
@@ -422,10 +450,11 @@
     const overlay = document.getElementById('loadingOverlay');
     const submitBtn = document.getElementById('submitBtn');
 
-    // 1. Check if the user is logged in BEFORE doing anything
+    // Double check if user is logged in just in case
     if (!window.auth || !window.auth.currentUser) {
       showToast("Please log in first to publish an ad.", true);
-      return; // Stop the function here
+      setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+      return;
     }
 
     submitBtn.disabled = true;
@@ -435,17 +464,17 @@
       const user = window.auth.currentUser;
       const uid = user.uid;
 
-      // 2. Fetch the user's name from the 'users' node in the database
+      // Fetch the user's name from the 'users' node in the database
       const userRef = window.dbRef(window.db, 'users/' + uid);
       const userSnapshot = await window.dbGet(userRef);
       const userData = userSnapshot.val();
       const sellerName = userData && userData.name ? userData.name : "Unknown Seller";
 
-      // 3. Get Contact Details from the form
+      // Get Contact Details from the form
       const mobileNumber = document.getElementById('mobileNumber').value;
-      const whatsappNumber = document.getElementById('whatsappNumber').value || mobileNumber; // Default to mobile if empty
+      const whatsappNumber = document.getElementById('whatsappNumber').value || mobileNumber;
 
-      // 4. Gather all form data
+      // Gather all form data
       const vehicleType = document.getElementById('vehicleType').value;
       const adData = {
         title: document.getElementById('brand').value,
@@ -461,7 +490,7 @@
         condition: document.getElementById('condition').value,
         imageUrl: "",
         hasVideo: false,
-        sellerName: sellerName, // Auto-uploaded from database
+        sellerName: sellerName, 
         mobileNumber: mobileNumber,
         whatsappNumber: whatsappNumber,
         userId: uid,
@@ -470,7 +499,6 @@
 
       console.log("Attempting to save data to Firebase...");
       
-      // Save under vehicles/{vehicleType}/{timestamp}
       const customId = Date.now(); 
       const adRefPath = window.dbRef(window.db, 'vehicles/' + vehicleType + '/' + customId);
       
@@ -480,7 +508,6 @@
       overlay.classList.remove('active');
       showToast("Ad published successfully!", false);
 
-      // Redirect back to home after 1.5 seconds
       setTimeout(() => {
         window.location.href = 'index.html';
       }, 1500);
@@ -489,8 +516,6 @@
       console.error("Firebase Write Error:", error);
       overlay.classList.remove('active');
       submitBtn.disabled = false;
-      
-      // Show exact error message in the toast
       showToast("Error: " + error.message, true);
     }
   });
