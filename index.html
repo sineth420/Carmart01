@@ -22,17 +22,18 @@
   * { box-sizing: border-box; }
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;
+    /* Slightly darker background, not pitch black */
     background-color: #334155; 
     background-image: 
       radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.1), transparent 40%),
       radial-gradient(circle at 100% 100%, rgba(234, 88, 12, 0.1), transparent 40%);
-    color: #f8fafc; 
+    color: #f8fafc; /* Light text for outside the glass */
     margin: 0;
   }
 
   /* Dark Glassmorphism Box Style */
   .glass-card {
-    background: rgba(15, 23, 42, 0.75); 
+    background: rgba(15, 23, 42, 0.75); /* Dark slate glass tint */
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -75,7 +76,7 @@
   .side-panel {
     position: fixed; top: 0; right: 0; height: 100vh;
     width: 320px; max-width: 85vw;
-    background: #1e293b; 
+    background: #1e293b; /* Darker panel for dark mode */
     box-shadow: -10px 0 30px rgba(0,0,0,0.2);
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -109,7 +110,7 @@
   }
   .modal-overlay.open .modal { transform: scale(1); }
 
-  /* Inputs */
+  /* Inputs - Standard White Background */
   .input {
     width: 100%; padding: 12px 16px; border: 1px solid #475569;
     border-radius: 8px; font-size: 15px; font-family: inherit;
@@ -134,12 +135,6 @@
     background: rgba(255, 255, 255, 0.12); 
     box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); 
   }
-  /* Error state for inputs */
-  .input-glass.input-error {
-    border-color: #ef4444 !important;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
-  }
-
   select.input-glass option { background: #1e293b; color: #ffffff; }
 
   .select-wrapper { position: relative; }
@@ -147,16 +142,6 @@
     content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
     position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
     pointer-events: none; color: #94a3b8; font-size: 12px;
-  }
-
-  /* Auth Tabs */
-  .auth-tab {
-    flex: 1; padding: 10px; text-align: center; cursor: pointer;
-    font-weight: 600; color: #94a3b8; border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-  }
-  .auth-tab.active {
-    color: var(--primary); border-bottom-color: var(--primary);
   }
 
   /* Cards */
@@ -201,7 +186,7 @@
 </head>
 <body class="antialiased">
 
-<!-- NAVBAR -->
+<!-- NAVBAR (Dark Glass Design) -->
 <nav class="glass-card sticky top-0 z-50" style="border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16 gap-4">
@@ -225,8 +210,16 @@
       </div>
 
       <div class="hidden md:flex items-center gap-3">
-        <button id="navSignInBtn" onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>
-        <a href="myaccount.html" id="navMyAccountBtn" class="hidden text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">My Account</a>
+        <!-- MY CART BUTTON -->
+        <a href="cart.html" class="relative text-slate-200 hover:text-orange-500 transition-colors" title="My Cart">
+          <i class="fa-solid fa-cart-shopping text-lg"></i>
+          <span id="cartCount" class="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+        </a>
+        
+        <div id="authSection">
+          <button onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>
+        </div>
+        
         <a href="add.html" class="btn-primary text-sm no-underline">
           <i class="fa-solid fa-plus"></i> Post Ad
         </a>
@@ -256,18 +249,18 @@
     <a href="index.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-home w-5"></i> Home
     </a>
+    <a href="cart.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
+      <i class="fa-solid fa-cart-shopping w-5"></i> My Cart
+    </a>
     <a href="#listings" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-car w-5"></i> Browse Vehicles
     </a>
     <a href="#video-feature" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-video w-5"></i> Video Ads
     </a>
-    <button id="mobileSignInBtn" onclick="openSignIn(); closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
+    <button onclick="openSignIn(); closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
       <i class="fa-solid fa-user w-5"></i> Sign In
     </button>
-    <a href="myaccount.html" id="mobileMyAccountBtn" class="hidden flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
-      <i class="fa-solid fa-user w-5"></i> My Account
-    </a>
     <a href="add.html" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg bg-orange-500 text-white font-medium">
       <i class="fa-solid fa-plus w-5"></i> Post Ad
     </a>
@@ -289,6 +282,7 @@
       </p>
     </div>
 
+    <!-- Main Search Bar (Dark Glass Box) -->
     <div class="max-w-5xl mx-auto glass-card p-4 rounded-xl">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
         <div class="md:col-span-6 relative">
@@ -394,12 +388,13 @@
   </div>
 </section>
 
-<!-- RECENT LISTINGS -->
+<!-- RECENT LISTINGS (FIREBASE RTDB) -->
 <section id="listings" class="py-12 bg-slate-800/30">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center mb-8">
       <div>
         <h2 id="listingTitle" class="text-2xl font-bold text-white">Recent Vehicle Ads</h2>
+        <p class="text-slate-400 text-sm mt-1">Loaded directly from Firebase Realtime Database</p>
       </div>
       <button onclick="loadVehicles()" class="text-orange-500 font-semibold text-sm hover:underline">Reset Search</button>
     </div>
@@ -442,23 +437,18 @@
         </a>
       </div>
       <div class="relative">
-        <a href="add.html" class="block relative group cursor-pointer">
-          <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative">
-            <video class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted loop autoplay playsinline>
-              <source src="media/video/cradd.mp4" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
-              </div>
+        <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative group cursor-pointer">
+          <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Video Thumbnail" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
             </div>
-            <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-md text-sm font-medium">0:20</div>
           </div>
-          <div class="absolute -bottom-4 -left-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm hidden md:block">
-            Add your video now
-          </div>
-        </a>
+          <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-md text-sm font-medium">0:18 / 0:20</div>
+        </div>
+        <div class="absolute -bottom-4 -left-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm hidden md:block">
+          Toyota Aqua 2014
+        </div>
       </div>
     </div>
   </div>
@@ -493,18 +483,10 @@
 <div class="modal-overlay" id="signInModal" onclick="if(event.target.id==='signInModal') closeSignIn()">
   <div class="modal glass-card">
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-2xl font-bold text-white">Welcome to Car Mart</h3>
+      <h3 class="text-2xl font-bold text-white">Sign In to Car Mart</h3>
       <button onclick="closeSignIn()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
-    
-    <!-- Tabs -->
-    <div class="flex border-b border-slate-600 mb-6">
-      <div class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">Login</div>
-      <div class="auth-tab" id="signupTab" onclick="switchAuthTab('signup')">Sign Up</div>
-    </div>
-
-    <!-- Login Form -->
-    <form id="loginForm" class="space-y-4">
+    <form id="signInForm" class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
         <input type="email" id="loginEmail" required placeholder="you@example.com" class="input-glass">
@@ -512,36 +494,14 @@
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
         <input type="password" id="loginPassword" required placeholder="••••••••" class="input-glass">
-        <p id="loginPassError" class="text-red-500 text-xs mt-1 hidden">Password must be 6 characters long</p>
       </div>
-      <button type="submit" class="w-full btn-primary justify-center mt-2">Login</button>
+      <div class="flex items-center justify-between text-sm">
+        <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-orange-500 focus:ring-orange-500"> Remember me</label>
+        <a href="#" class="text-orange-500 hover:underline">Forgot password?</a>
+      </div>
+      <button type="submit" class="w-full btn-primary justify-center mt-2">Sign In / Register</button>
       <p class="text-center text-sm text-slate-400 mt-4">
-        Don't have an account? <a href="#" onclick="switchAuthTab('signup')" class="text-orange-500 font-semibold hover:underline">Sign up free</a>
-      </p>
-    </form>
-
-    <!-- Sign Up Form -->
-    <form id="signupForm" class="space-y-4 hidden">
-      <div>
-        <label class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
-        <input type="text" id="signupName" required placeholder="John Doe" class="input-glass">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-300 mb-1">Phone Number</label>
-        <input type="tel" id="signupPhone" required placeholder="0771234567" class="input-glass">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
-        <input type="email" id="signupEmail" required placeholder="you@example.com" class="input-glass">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-        <input type="password" id="signupPassword" required placeholder="••••••••" class="input-glass">
-        <p id="signupPassError" class="text-red-500 text-xs mt-1 hidden">Password must be 6 characters long</p>
-      </div>
-      <button type="submit" class="w-full btn-primary justify-center mt-2">Sign Up</button>
-      <p class="text-center text-sm text-slate-400 mt-4">
-        Already have an account? <a href="#" onclick="switchAuthTab('login')" class="text-orange-500 font-semibold hover:underline">Login</a>
+        New here? Just enter your email and password, we will create an account for you!
       </p>
     </form>
   </div>
@@ -551,7 +511,7 @@
 <div class="toast" id="toast">Message sent!</div>
 
 <script>
-  // ===== FIREBASE CONFIGURATION =====
+  // ===== FIREBASE REALTIME DATABASE CONFIGURATION =====
   const firebaseConfig = {
     apiKey: "AIzaSyAEu-uW53mk9kaHh6Lh_qa8-M59yz_fseY",
     authDomain: "car-mart01.firebaseapp.com",
@@ -596,135 +556,66 @@
     document.getElementById('sidePanel').classList.remove('open');
     document.getElementById('panelOverlay').classList.remove('open');
   }
-  function openSignIn() { 
-    document.getElementById('signInModal').classList.add('open'); 
-    switchAuthTab('login'); // Default to login tab
-  }
+  function openSignIn() { document.getElementById('signInModal').classList.add('open'); }
   function closeSignIn() { document.getElementById('signInModal').classList.remove('open'); }
   function showToast(msg) {
     const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.classList.add('show');
+    t.innerText = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  // ===== AUTH TAB SWITCHING =====
-  function switchAuthTab(tab) {
-    const loginTab = document.getElementById('loginTab');
-    const signupTab = document.getElementById('signupTab');
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-
-    if (tab === 'login') {
-      loginTab.classList.add('active');
-      signupTab.classList.remove('active');
-      loginForm.classList.remove('hidden');
-      signupForm.classList.add('hidden');
-    } else {
-      signupTab.classList.add('active');
-      loginTab.classList.remove('active');
-      signupForm.classList.remove('hidden');
-      loginForm.classList.add('hidden');
-    }
-  }
-
-  // ===== PASSWORD VALIDATION =====
-  function setupPasswordValidation(inputId, errorId) {
-    const input = document.getElementById(inputId);
-    const error = document.getElementById(errorId);
-    input.addEventListener('input', () => {
-      if (input.value.length > 0 && input.value.length < 6) {
-        input.classList.add('input-error');
-        error.classList.remove('hidden');
-      } else {
-        input.classList.remove('input-error');
-        error.classList.add('hidden');
-      }
-    });
-  }
-  setupPasswordValidation('loginPassword', 'loginPassError');
-  setupPasswordValidation('signupPassword', 'signupPassError');
-
-  // ===== FIREBASE AUTHENTICATION =====
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      document.getElementById('navSignInBtn').classList.add('hidden');
-      document.getElementById('navMyAccountBtn').classList.remove('hidden');
-      document.getElementById('mobileSignInBtn').classList.add('hidden');
-      document.getElementById('mobileMyAccountBtn').classList.remove('hidden');
-      document.getElementById('mobileMyAccountBtn').classList.add('flex');
-    } else {
-      document.getElementById('navSignInBtn').classList.remove('hidden');
-      document.getElementById('navMyAccountBtn').classList.add('hidden');
-      document.getElementById('mobileSignInBtn').classList.remove('hidden');
-      document.getElementById('mobileMyAccountBtn').classList.add('hidden');
-      document.getElementById('mobileMyAccountBtn').classList.remove('flex');
-    }
-  });
-
-  // Login Logic
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  // ===== AUTH LOGIC =====
+  document.getElementById('signInForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    
-    if (password.length < 6) {
-      showToast("Password must be 6 characters long");
-      return;
-    }
-
     try {
       await auth.signInWithEmailAndPassword(email, password);
       closeSignIn();
-      showToast("Logged in successfully! Welcome back.");
+      showToast("Signed in successfully!");
     } catch (error) {
-      // Firebase hides exact reasons for security, but usually invalid-credential means wrong password or email doesn't exist.
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-        showToast("Account not found or password is wrong. Please Sign Up if you don't have an account.");
-        switchAuthTab('signup'); // Auto switch to signup tab if account doesn't exist
+      if (error.code === 'auth/user-not-found') {
+        await auth.createUserWithEmailAndPassword(email, password);
+        closeSignIn();
+        showToast("Account created successfully!");
       } else {
         showToast("Error: " + error.message);
       }
     }
   });
 
-  // Sign Up Logic
-  document.getElementById('signupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('signupName').value;
-    const phone = document.getElementById('signupPhone').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
+  // ===== TRACK LOGIN STATE & CART COUNT =====
+  auth.onAuthStateChanged(user => {
+    const authSection = document.getElementById('authSection');
+    const cartCount = document.getElementById('cartCount');
     
-    if (password.length < 6) {
-      showToast("Password must be 6 characters long");
-      return;
-    }
-
-    try {
-      // 1. Create the user in Firebase Authentication
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-      const user = userCredential.user;
+    if (user) {
+      authSection.innerHTML = `
+        <span class="text-sm text-slate-300 hidden lg:inline">${user.email}</span>
+        <button onclick="logout()" class="text-sm font-semibold text-orange-500 ml-2">Logout</button>
+      `;
       
-      // 2. Store the user's UID, Name, and Phone in the Realtime Database under 'users' node
-      await db.ref('users/' + user.uid).set({
-        uid: user.uid,
-        name: name,
-        phone: phone,
-        email: email
+      // Listen to cart changes
+      db.ref(`Mycart/${user.uid}`).on('value', (snapshot) => {
+        const count = snapshot.numChildren();
+        if (count > 0) {
+          cartCount.innerText = count;
+          cartCount.classList.remove('hidden');
+        } else {
+          cartCount.classList.add('hidden');
+        }
       });
 
-      closeSignIn();
-      showToast("Account created successfully! You are now logged in.");
-    } catch (error) {
-      if (error.code === 'auth/email-already-in-use') {
-        showToast("This email is already registered. Please Login.");
-        switchAuthTab('login'); // Auto switch to login tab if account exists
-      } else {
-        showToast("Error: " + error.message);
-      }
+    } else {
+      authSection.innerHTML = `<button onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>`;
+      cartCount.classList.add('hidden');
     }
   });
+
+  function logout() {
+    auth.signOut();
+    showToast("Logged out.");
+  }
 
   // ===== DATA LOADING & SEARCHING =====
 
@@ -734,11 +625,12 @@
       grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500">No vehicles found.</div>';
       return;
     }
+    // NOTE: encodeURIComponent is applied here to fix categories like "SUVs & Jeeps"
     grid.innerHTML = vehicles.map(v => `
       <div class="vehicle-card cursor-pointer" onclick="window.location.href='addopen.html?id=${v.id}&type=${encodeURIComponent(v.vehicleType)}'">
         <div class="relative overflow-hidden h-48">
           <img src="${v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image'}" alt="${v.title}" class="w-full h-full object-cover">
-          ${v.hasVideo ? ` 
+          ${v.hasVideo ? `
             <div class="absolute top-3 left-3">
               <span class="video-badge"><i class="fa-solid fa-play"></i> Video Ad</span>
             </div>
@@ -764,6 +656,7 @@
     `).join('');
   }
 
+  // Fetch Recent Ads (Newly updated first)
   async function loadVehicles() {
     document.getElementById('listingTitle').innerText = "Recent Vehicle Ads";
     const grid = document.getElementById('vehicleGrid');
@@ -799,6 +692,7 @@
     }
   }
 
+  // Search Ads
   async function performSearch() {
     const query = (document.getElementById('heroSearch')?.value || document.getElementById('navSearch')?.value || document.getElementById('mobileSearch')?.value || '').trim().toLowerCase();
     const locationVal = document.getElementById('heroLocation')?.value || 'All Sri Lanka';
@@ -851,6 +745,7 @@
     }
   }
 
+  // Filter by Category
   async function filterByCategory(category) {
     document.getElementById('listingTitle').innerText = category + " Ads";
     const grid = document.getElementById('vehicleGrid');
@@ -900,6 +795,7 @@
     return new Date(ts).toLocaleDateString();
   }
 
+  // Initialize on load
   window.onload = function() {
     populateLocations();
     loadVehicles();
