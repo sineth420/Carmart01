@@ -179,15 +179,13 @@
         <span class="text-xl font-extrabold tracking-tight text-white">Car Mart</span>
       </a>
 
-      <div class="hidden md:flex items-center gap-3">
+      <div class="hidden md:flex items-center gap-3 ml-auto">
         <!-- MY CART BUTTON (Styled as Primary Orange Button) -->
         <a href="cart.html" class="btn-primary relative no-underline" title="My Cart" aria-label="My Cart" style="padding: 8px 14px; font-size: 0.85rem;">
           <i class="fa-solid fa-cart-shopping"></i> Cart
           <span id="cartCount" class="absolute -top-2 -right-2 bg-white text-orange-600 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
         </a>
-        <a href="index.html" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors flex items-center gap-2">
-          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to Listings
-        </a>
+        <!-- FIX: Removed Back to Listings button -->
         <a href="add.html" class="btn-primary text-sm no-underline" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">
           <i class="fa-solid fa-plus" aria-hidden="true"></i> Post Ad
         </a>
@@ -234,9 +232,9 @@
         <div class="skeleton aspect-square rounded-lg"></div>
         <div class="skeleton aspect-square rounded-lg"></div>
         <div class="skeleton aspect-square rounded-lg"></div>
-        <div class="skeleton aspect-square rounded-lg hidden sm:block"></div>
-        <div class="skeleton aspect-square rounded-lg hidden sm:block"></div>
-        <div class="skeleton aspect-square rounded-lg hidden sm:block"></div>
+        <div class="skeleton aspect-square rounded-lg"></div>
+        <div class="skeleton aspect-square rounded-lg"></div>
+        <div class="skeleton aspect-square rounded-lg"></div>
       </div>
     </div>
     <div class="glass-card p-6 md:p-8 rounded-xl space-y-6">
@@ -260,7 +258,7 @@
           <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Vehicle primary view">
       </div>
       
-      <!-- Thumbnails -->
+      <!-- FIX: Removed hidden classes so all thumbnails show on mobile -->
       <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
         <button class="thumbnail active" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 1">
           <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 1" loading="lazy">
@@ -274,13 +272,13 @@
         <button class="thumbnail" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 4">
           <img src="https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 4" loading="lazy">
         </button>
-        <button class="thumbnail hidden sm:block" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 5">
+        <button class="thumbnail" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 5">
           <img src="https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 5" loading="lazy">
         </button>
-        <button class="thumbnail hidden sm:block" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 6">
+        <button class="thumbnail" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 6">
           <img src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 6" loading="lazy">
         </button>
-        <button class="thumbnail video-thumb hidden sm:flex" onclick="changeMedia('video', 'https://www.w3schools.com/html/mov_bbb.mp4', this)" aria-label="Play video">
+        <button class="thumbnail video-thumb flex" onclick="changeMedia('video', 'https://www.w3schools.com/html/mov_bbb.mp4', this)" aria-label="Play video">
           <i class="fa-solid fa-play text-xl" aria-hidden="true"></i>
           <span class="text-[10px] font-semibold">0:20</span>
         </button>
@@ -452,10 +450,15 @@
   // ===== ADD TO CART LOGIC =====
   async function addToCart() {
     const user = auth.currentUser;
+    // FIX: If user is not logged in, prevent adding to cart and redirect to login
     if (!user) {
-      showToast("Please sign in on the homepage first to add items to cart.");
+      showToast("Please sign in to add items to cart. Redirecting...");
+      setTimeout(() => {
+        window.location.href = 'index.html'; // Redirect to homepage to login
+      }, 2000);
       return;
     }
+    
     try {
       const cartRef = db.ref(`Mycart/${user.uid}`);
       const snapshot = await cartRef.once('value');
