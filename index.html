@@ -135,7 +135,16 @@
     background: rgba(255, 255, 255, 0.12); 
     box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); 
   }
-  select.input-glass option { background: #1e293b; color: #ffffff; }
+  
+  /* FIX: Specific styling for Select Dropdowns to match Header */
+  select.input-glass, #navLocation, #navLocation option {
+    background-color: #0f172a; /* Same dark color as Header */
+    color: #ffffff;
+  }
+  select.input-glass option {
+    background-color: #0f172a;
+    color: #ffffff;
+  }
 
   .select-wrapper { position: relative; }
   .select-wrapper::after {
@@ -202,23 +211,23 @@
       <div class="hidden md:flex flex-1 max-w-xl items-center border border-white/15 rounded-lg overflow-hidden hover:border-orange-400 transition-colors bg-white/5">
         <input type="text" id="navSearch" placeholder="Search cars, vans, bikes..." class="flex-1 px-4 py-2 outline-none text-sm text-white bg-transparent placeholder-slate-400">
         <div class="select-wrapper border-l border-white/15">
-          <select id="navLocation" class="px-3 py-2 text-sm text-slate-300 outline-none bg-transparent appearance-none pr-8 cursor-pointer h-full"></select>
+          <select id="navLocation" class="px-3 py-2 text-sm text-white outline-none appearance-none pr-8 cursor-pointer h-full"></select>
         </div>
         <button onclick="performSearch()" class="bg-orange-500 text-white px-4 py-2 hover:bg-orange-600 transition-colors">
           <i class="fa-solid fa-magnifying-glass"></i>
         </button>
       </div>
 
+      <!-- FIX: Moved Cart near Post Ad -->
       <div class="hidden md:flex items-center gap-3">
-        <!-- MY CART BUTTON -->
-        <a href="cart.html" class="relative text-slate-200 hover:text-orange-500 transition-colors" title="My Cart">
-          <i class="fa-solid fa-cart-shopping text-lg"></i>
-          <span id="cartCount" class="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
-        </a>
-        
         <div id="authSection">
           <button onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>
         </div>
+        
+        <a href="cart.html" class="btn-primary relative no-underline" title="My Cart" style="padding: 8px 14px; font-size: 0.85rem;">
+          <i class="fa-solid fa-cart-shopping"></i> Cart
+          <span id="cartCount" class="absolute -top-2 -right-2 bg-white text-orange-600 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+        </a>
         
         <a href="add.html" class="btn-primary text-sm no-underline">
           <i class="fa-solid fa-plus"></i> Post Ad
@@ -437,17 +446,16 @@
         </a>
       </div>
       <div class="relative">
+        <!-- FIX: Replaced image with local video path media/videos/car.mp4 -->
         <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative group cursor-pointer">
-          <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Video Thumbnail" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white group-hover:scale-110 transition-transform">
-              <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
-            </div>
-          </div>
-          <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-md text-sm font-medium">0:18 / 0:20</div>
+          <video class="w-full h-full object-cover" autoplay muted loop playsinline>
+            <source src="media/videos/car.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
         </div>
+        <!-- FIX: Changed text from Toyota Aqua 2014 -->
         <div class="absolute -bottom-4 -left-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm hidden md:block">
-          Toyota Aqua 2014
+          Post your car as a video
         </div>
       </div>
     </div>
@@ -558,10 +566,17 @@
   }
   function openSignIn() { document.getElementById('signInModal').classList.add('open'); }
   function closeSignIn() { document.getElementById('signInModal').classList.remove('open'); }
+  
+  // FIX: Toast Auto Disappear Logic
+  let toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
-    t.innerText = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
+    t.innerText = msg; 
+    t.classList.add('show');
+    clearTimeout(toastTimer); // Clear any existing timer
+    toastTimer = setTimeout(() => {
+      t.classList.remove('show');
+    }, 3000);
   }
 
   // ===== AUTH LOGIC =====
@@ -590,10 +605,8 @@
     const cartCount = document.getElementById('cartCount');
     
     if (user) {
-      authSection.innerHTML = `
-        <span class="text-sm text-slate-300 hidden lg:inline">${user.email}</span>
-        <button onclick="logout()" class="text-sm font-semibold text-orange-500 ml-2">Logout</button>
-      `;
+      // FIX: Removed email text, kept only the Logout button
+      authSection.innerHTML = `<button onclick="logout()" class="text-sm font-semibold text-orange-500 ml-2">Logout</button>`;
       
       // Listen to cart changes
       db.ref(`Mycart/${user.uid}`).on('value', (snapshot) => {
