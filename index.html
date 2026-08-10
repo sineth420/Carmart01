@@ -218,10 +218,9 @@
         </button>
       </div>
 
-      <!-- FIX: Moved Cart near Post Ad -->
       <div class="hidden md:flex items-center gap-3">
         <div id="authSection">
-          <button onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>
+          <!-- This will be dynamically updated by JS based on login state -->
         </div>
         
         <a href="cart.html" class="btn-primary relative no-underline" title="My Cart" style="padding: 8px 14px; font-size: 0.85rem;">
@@ -261,15 +260,15 @@
     <a href="cart.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-cart-shopping w-5"></i> My Cart
     </a>
+    <a href="myaccount.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
+      <i class="fa-solid fa-user w-5"></i> My Account
+    </a>
     <a href="#listings" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-car w-5"></i> Browse Vehicles
     </a>
     <a href="#video-feature" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-video w-5"></i> Video Ads
     </a>
-    <button onclick="openSignIn(); closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
-      <i class="fa-solid fa-user w-5"></i> Sign In
-    </button>
     <a href="add.html" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg bg-orange-500 text-white font-medium">
       <i class="fa-solid fa-plus w-5"></i> Post Ad
     </a>
@@ -397,13 +396,13 @@
   </div>
 </section>
 
-<!-- RECENT LISTINGS (FIREBASE RTDB) -->
+<!-- RECENT LISTINGS -->
 <section id="listings" class="py-12 bg-slate-800/30">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center mb-8">
       <div>
         <h2 id="listingTitle" class="text-2xl font-bold text-white">Recent Vehicle Ads</h2>
-        <p class="text-slate-400 text-sm mt-1">Loaded directly from Firebase Realtime Database</p>
+        <!-- Removed the Firebase text paragraph from here -->
       </div>
       <button onclick="loadVehicles()" class="text-orange-500 font-semibold text-sm hover:underline">Reset Search</button>
     </div>
@@ -446,14 +445,12 @@
         </a>
       </div>
       <div class="relative">
-        <!-- FIX: Replaced image with local video path media/videos/car.mp4 -->
         <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-slate-700 relative group cursor-pointer">
           <video class="w-full h-full object-cover" autoplay muted loop playsinline>
             <source src="media/videos/car.mp4" type="video/mp4">
             Your browser does not support the video tag.
           </video>
         </div>
-        <!-- FIX: Changed text from Toyota Aqua 2014 -->
         <div class="absolute -bottom-4 -left-4 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm hidden md:block">
           Post your car as a video
         </div>
@@ -567,37 +564,33 @@
   function openSignIn() { document.getElementById('signInModal').classList.add('open'); }
   function closeSignIn() { document.getElementById('signInModal').classList.remove('open'); }
   
-  // FIX: Toast Auto Disappear Logic
   let toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.innerText = msg; 
     t.classList.add('show');
-    clearTimeout(toastTimer); // Clear any existing timer
+    clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       t.classList.remove('show');
     }, 3000);
   }
 
-    // ===== AUTH LOGIC =====
+  // ===== AUTH LOGIC =====
   document.getElementById('signInForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     try {
-      // 1. පළමුව Login වීමට උත්සාහ කරයි
       await auth.signInWithEmailAndPassword(email, password);
       closeSignIn();
       showToast("Signed in successfully!");
     } catch (error) {
-      // 2. ගිණුම නැතිනම් හෝ අක්තපත්‍ර වැරදි නම්, අලුත් ගිණුමක් සෑදීමට උත්සාහ කරයි
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         try {
           await auth.createUserWithEmailAndPassword(email, password);
           closeSignIn();
           showToast("Account created successfully!");
         } catch (createError) {
-          // 3. ගිණුම දැනටමත් ඇති නම් (Password එක වැරදී ඇත)
           if (createError.code === 'auth/email-already-in-use') {
             showToast("Error: Incorrect password. Please try again.");
           } else {
@@ -616,10 +609,9 @@
     const cartCount = document.getElementById('cartCount');
     
     if (user) {
-      // FIX: Removed email text, kept only the Logout button
-      authSection.innerHTML = `<button onclick="logout()" class="text-sm font-semibold text-orange-500 ml-2">Logout</button>`;
+      // FIX: Replaced Logout button with My Account button
+      authSection.innerHTML = `<a href="myaccount.html" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">My Account</a>`;
       
-      // Listen to cart changes
       db.ref(`Mycart/${user.uid}`).on('value', (snapshot) => {
         const count = snapshot.numChildren();
         if (count > 0) {
@@ -631,15 +623,11 @@
       });
 
     } else {
-      authSection.innerHTML = `<button onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Sign In</button>`;
+      // If not logged in, show Login button
+      authSection.innerHTML = `<button onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Login</button>`;
       cartCount.classList.add('hidden');
     }
   });
-
-  function logout() {
-    auth.signOut();
-    showToast("Logged out.");
-  }
 
   // ===== DATA LOADING & SEARCHING =====
 
@@ -649,7 +637,6 @@
       grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500">No vehicles found.</div>';
       return;
     }
-    // NOTE: encodeURIComponent is applied here to fix categories like "SUVs & Jeeps"
     grid.innerHTML = vehicles.map(v => `
       <div class="vehicle-card cursor-pointer" onclick="window.location.href='addopen.html?id=${v.id}&type=${encodeURIComponent(v.vehicleType)}'">
         <div class="relative overflow-hidden h-48">
@@ -680,7 +667,6 @@
     `).join('');
   }
 
-  // Fetch Recent Ads (Newly updated first)
   async function loadVehicles() {
     document.getElementById('listingTitle').innerText = "Recent Vehicle Ads";
     const grid = document.getElementById('vehicleGrid');
@@ -716,7 +702,6 @@
     }
   }
 
-  // Search Ads
   async function performSearch() {
     const query = (document.getElementById('heroSearch')?.value || document.getElementById('navSearch')?.value || document.getElementById('mobileSearch')?.value || '').trim().toLowerCase();
     const locationVal = document.getElementById('heroLocation')?.value || 'All Sri Lanka';
@@ -769,7 +754,6 @@
     }
   }
 
-  // Filter by Category
   async function filterByCategory(category) {
     document.getElementById('listingTitle').innerText = category + " Ads";
     const grid = document.getElementById('vehicleGrid');
@@ -819,7 +803,6 @@
     return new Date(ts).toLocaleDateString();
   }
 
-  // Initialize on load
   window.onload = function() {
     populateLocations();
     loadVehicles();
