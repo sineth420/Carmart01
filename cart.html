@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Cart - Car Mart</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<style>
+  :root { --primary: #f97316; --primary-dark: #ea580c; --white: #ffffff; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #334155; color: #f8fafc; margin: 0; }
+  .glass-card { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); color: #ffffff; }
+  .btn-primary { background-color: var(--primary); color: var(--white); padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; text-decoration: none; }
+  .btn-primary:hover { background-color: var(--primary-dark); }
+  .cart-item { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; transition: all 0.2s; }
+  .cart-item:hover { border-color: var(--primary); }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--white); color: #0f172a; padding: 12px 24px; border-radius: 8px; z-index: 300; font-weight: 500; transition: transform 0.3s; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<nav class="glass-card sticky top-0 z-50" style="border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <div class="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center"><i class="fa-solid fa-car text-white"></i></div>
+      <span class="text-xl font-extrabold tracking-tight text-white">Car Mart</span>
+    </a>
+    <a href="index.html" class="text-sm font-semibold text-slate-200 hover:text-orange-500 flex items-center gap-2">
+      <i class="fa-solid fa-arrow-left"></i> Back to Home
+    </a>
+  </div>
+</nav>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <h1 class="text-3xl font-extrabold text-white mb-6">My Saved Cart</h1>
+  
+  <div id="cartContainer" class="space-y-4">
+    <div class="text-center text-slate-400 py-20">Loading your cart...</div>
+  </div>
+</main>
+
+<div class="toast" id="toast">Message</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEu-uW53mk9kaHh6Lh_qa8-M59yz_fseY",
+    authDomain: "car-mart01.firebaseapp.com",
+    databaseURL: "https://car-mart01-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "car-mart01",
+    storageBucket: "car-mart01.firebasestorage.app",
+    messagingSenderId: "257242312778",
+    appId: "1:257242312778:web:5c3e8bff7429a5f5d2b6b3",
+    measurementId: "G-MFT2YY8Y5Y"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
+
+  function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+  auth.onAuthStateChanged(async (user) => {
+    const container = document.getElementById('cartContainer');
+    if (!user) {
+      container.innerHTML = '<div class="text-center text-slate-400 py-20">Please sign in on the homepage to view your cart.</div>';
+      return;
+    }
+
+    const cartRef = db.ref(`Mycart/${user.uid}`);
+    cartRef.on('value', (snapshot) => {
+      if (!snapshot.exists()) {
+        container.innerHTML = '<div class="text-center text-slate-400 py-20">Your cart is empty.</div>';
+        return;
+      }
+
+      let html = '';
+      snapshot.forEach(child => {
+        const item = child.val();
+        const itemKey = child.key;
+        html += `
+          <div class="cart-item flex flex-col sm:flex-row gap-4 p-4">
+            <img src="${item.imageUrl || 'https://via.placeholder.com/150x100?text=No+Image'}" class="w-full sm:w-48 h-32 object-cover rounded-lg" alt="${item.title}">
+            <div class="flex-1 flex flex-col justify-between">
+              <div>
+                <h3 class="text-lg font-bold text-white">${item.title}</h3>
+                <p class="text-orange-500 font-extrabold text-xl mt-1">Rs ${Number(item.price || 0).toLocaleString()}</p>
+              </div>
+              <div class="flex gap-3 mt-4 sm:mt-0">
+                <a href="addopen.html?id=${item.id}&type=${encodeURIComponent(item.type)}" class="btn-primary text-sm">View Ad</a>
+                <button onclick="removeItem('${itemKey}')" class="text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-1"><i class="fa-solid fa-trash"></i> Remove</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    });
+  });
+
+  async function removeItem(key) {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await db.ref(`Mycart/${user.uid}/${key}`).remove();
+      showToast("Item removed from cart.");
+    } catch (error) {
+      showToast("Error removing item.");
+    }
+  }
+</script>
+</body>
+</html>
