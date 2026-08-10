@@ -180,15 +180,15 @@
       </a>
 
       <div class="hidden md:flex items-center gap-3">
-        <!-- MY CART BUTTON ADDED HERE -->
-        <a href="cart.html" class="relative text-slate-200 hover:text-orange-500 transition-colors" title="My Cart" aria-label="My Cart">
-          <i class="fa-solid fa-cart-shopping text-lg" aria-hidden="true"></i>
-          <span id="cartCount" class="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+        <!-- MY CART BUTTON (Styled as Primary Orange Button) -->
+        <a href="cart.html" class="btn-primary relative no-underline" title="My Cart" aria-label="My Cart" style="padding: 8px 14px; font-size: 0.85rem;">
+          <i class="fa-solid fa-cart-shopping"></i> Cart
+          <span id="cartCount" class="absolute -top-2 -right-2 bg-white text-orange-600 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
         </a>
         <a href="index.html" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors flex items-center gap-2">
           <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to Listings
         </a>
-        <a href="add.html" class="btn-primary text-sm no-underline" style="width: auto;">
+        <a href="add.html" class="btn-primary text-sm no-underline" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">
           <i class="fa-solid fa-plus" aria-hidden="true"></i> Post Ad
         </a>
       </div>
@@ -344,7 +344,7 @@
         </p>
       </div>
 
-      <!-- Contact Actions (Added Add to Cart Button) -->
+      <!-- Contact Actions (With Add to Cart Button) -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button id="callBtn" class="btn-primary" aria-label="Call Seller">
           <i class="fa-solid fa-phone" aria-hidden="true"></i> Call
@@ -387,7 +387,7 @@
   
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const auth = firebase.auth(); // Added Auth instance
+  const auth = firebase.auth();
 
   let currentAdData = {}; // To store ad data for cart
 
@@ -402,7 +402,7 @@
     panel.classList.toggle('open', !isOpen);
     overlay.classList.toggle('open', !isOpen);
     burger.setAttribute('aria-expanded', !isOpen);
-    document.body.style.overflow = !isOpen ? 'hidden' : ''; // Prevent background scrolling
+    document.body.style.overflow = !isOpen ? 'hidden' : '';
   }
 
   function closeBurger() {
@@ -416,12 +416,13 @@
     document.body.style.overflow = '';
   }
 
+  let toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.innerText = msg;
     t.classList.add('show');
-    clearTimeout(t.timeoutId);
-    t.timeoutId = setTimeout(() => t.classList.remove('show'), 3000);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
   }
 
   // ===== MEDIA GALLERY LOGIC =====
@@ -515,10 +516,8 @@
       adContent.classList.remove('hidden');
 
       if (adData) {
-        // Save to global variable for cart
         currentAdData = { type, id, ...adData };
 
-        // Safely populate DOM with fallbacks
         document.getElementById('adTitle').innerText = adData.title || 'Untitled Vehicle';
         document.getElementById('adPrice').innerText = `Rs ${Number(adData.price || 0).toLocaleString()}`;
         document.getElementById('adLocation').innerHTML = `<i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${adData.location || 'Sri Lanka'}`;
@@ -539,15 +538,12 @@
         const mobile = adData.mobileNumber || "";
         const whatsapp = adData.whatsappNumber || mobile;
 
-        // Update Seller Card UI
         document.getElementById('sellerName').innerText = sellerName;
         document.getElementById('sellerPhone').innerText = mobile ? mobile : "No phone provided";
         
-        // Set the initial letter of the seller's name
         const initial = sellerName.charAt(0).toUpperCase();
         document.getElementById('sellerInitial').innerText = initial;
 
-        // Update Call Button Logic
         const callBtn = document.getElementById('callBtn');
         if (mobile) {
           callBtn.addEventListener('click', () => {
@@ -559,10 +555,8 @@
           });
         }
 
-        // Update WhatsApp Button Logic
         const whatsappBtn = document.getElementById('whatsappBtn');
         if (whatsapp) {
-          // Format number for WhatsApp API (remove spaces, dashes, etc. If starts with 0, replace with 94)
           let waNum = whatsapp.replace(/\D/g, '');
           if (waNum.startsWith('0')) {
             waNum = '94' + waNum.substring(1);
@@ -576,7 +570,6 @@
           });
         }
 
-        // Add to Cart Button Listener
         document.getElementById('cartBtn').addEventListener('click', addToCart);
 
       } else {
@@ -601,7 +594,6 @@
     return new Date(ts).toLocaleDateString();
   }
 
-  // Initialize on DOMContentLoaded for faster execution
   document.addEventListener('DOMContentLoaded', loadAdDetails);
 </script>
 
