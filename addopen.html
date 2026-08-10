@@ -12,6 +12,7 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
   :root {
@@ -179,6 +180,11 @@
       </a>
 
       <div class="hidden md:flex items-center gap-3">
+        <!-- MY CART BUTTON ADDED HERE -->
+        <a href="cart.html" class="relative text-slate-200 hover:text-orange-500 transition-colors" title="My Cart" aria-label="My Cart">
+          <i class="fa-solid fa-cart-shopping text-lg" aria-hidden="true"></i>
+          <span id="cartCount" class="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+        </a>
         <a href="index.html" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors flex items-center gap-2">
           <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to Listings
         </a>
@@ -206,6 +212,9 @@
   <div class="flex flex-col gap-1">
     <a href="index.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-500 font-medium transition-colors">
       <i class="fa-solid fa-home w-5" aria-hidden="true"></i> Home
+    </a>
+    <a href="cart.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-500 font-medium transition-colors">
+      <i class="fa-solid fa-cart-shopping w-5" aria-hidden="true"></i> My Cart
     </a>
     <a href="add.html" class="flex items-center gap-3 p-3 rounded-lg bg-orange-500 text-white font-medium">
       <i class="fa-solid fa-plus w-5" aria-hidden="true"></i> Post Ad
@@ -335,13 +344,16 @@
         </p>
       </div>
 
-      <!-- Contact Actions -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Contact Actions (Added Add to Cart Button) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button id="callBtn" class="btn-primary" aria-label="Call Seller">
-          <i class="fa-solid fa-phone" aria-hidden="true"></i> Call Seller
+          <i class="fa-solid fa-phone" aria-hidden="true"></i> Call
         </button>
         <button id="whatsappBtn" class="btn-outline" aria-label="Contact on WhatsApp">
           <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i> WhatsApp
+        </button>
+        <button id="cartBtn" class="btn-outline" aria-label="Add to Cart">
+          <i class="fa-solid fa-cart-plus text-lg" aria-hidden="true"></i> Add to Cart
         </button>
       </div>
       
@@ -375,6 +387,9 @@
   
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+  const auth = firebase.auth(); // Added Auth instance
+
+  let currentAdData = {}; // To store ad data for cart
 
   // ===== UI INTERACTIONS =====
   function toggleBurger() {
@@ -433,6 +448,50 @@
     }
   }
 
+  // ===== ADD TO CART LOGIC =====
+  async function addToCart() {
+    const user = auth.currentUser;
+    if (!user) {
+      showToast("Please sign in on the homepage first to add items to cart.");
+      return;
+    }
+    try {
+      const cartRef = db.ref(`Mycart/${user.uid}`);
+      const snapshot = await cartRef.once('value');
+      const itemCount = snapshot.numChildren();
+      const newItemKey = `item${itemCount + 1}`; // Creates item1, item2, item3...
+
+      await cartRef.child(newItemKey).set({
+        type: currentAdData.type,
+        id: currentAdData.id,
+        title: currentAdData.title,
+        price: currentAdData.price,
+        imageUrl: currentAdData.imageUrl || ""
+      });
+      showToast("Added to Cart successfully!");
+    } catch (error) {
+      showToast("Error adding to cart: " + error.message);
+    }
+  }
+
+  // ===== TRACK LOGIN STATE & CART COUNT =====
+  auth.onAuthStateChanged(user => {
+    const cartCount = document.getElementById('cartCount');
+    if (user) {
+      db.ref(`Mycart/${user.uid}`).on('value', (snapshot) => {
+        const count = snapshot.numChildren();
+        if (count > 0) {
+          cartCount.innerText = count;
+          cartCount.classList.remove('hidden');
+        } else {
+          cartCount.classList.add('hidden');
+        }
+      });
+    } else {
+      cartCount.classList.add('hidden');
+    }
+  });
+
   // ===== DATA FETCHING LOGIC =====
   async function loadAdDetails() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -456,6 +515,9 @@
       adContent.classList.remove('hidden');
 
       if (adData) {
+        // Save to global variable for cart
+        currentAdData = { type, id, ...adData };
+
         // Safely populate DOM with fallbacks
         document.getElementById('adTitle').innerText = adData.title || 'Untitled Vehicle';
         document.getElementById('adPrice').innerText = `Rs ${Number(adData.price || 0).toLocaleString()}`;
@@ -513,6 +575,9 @@
             showToast("WhatsApp number not available");
           });
         }
+
+        // Add to Cart Button Listener
+        document.getElementById('cartBtn').addEventListener('click', addToCart);
 
       } else {
         adContent.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500">Ad not found. It may have been deleted.</div>';
