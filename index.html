@@ -496,6 +496,11 @@
       <button onclick="closeSignIn()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
     <form id="signInForm" class="space-y-4">
+      <!-- ADDED NAME INPUT -->
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
+        <input type="text" id="loginName" placeholder="Eg: John Doe (Required for new users)" class="input-glass">
+      </div>
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
         <input type="email" id="loginEmail" required placeholder="you@example.com" class="input-glass">
@@ -510,7 +515,7 @@
       </div>
       <button type="submit" class="w-full btn-primary justify-center mt-2">Sign In / Register</button>
       <p class="text-center text-sm text-slate-400 mt-4">
-        New here? Just enter your email and password, we will create an account for you!
+        New here? Just enter your name, email, and password, we will create an account for you!
       </p>
     </form>
   </div>
@@ -584,14 +589,29 @@
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
+    const name = document.getElementById('loginName').value; // ADDED name retrieval
+    
     try {
       await auth.signInWithEmailAndPassword(email, password);
       closeSignIn();
       showToast("Signed in successfully!");
     } catch (error) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        if (!name) {
+          showToast("New user? Please enter your Full Name to register.");
+          return;
+        }
         try {
-          await auth.createUserWithEmailAndPassword(email, password);
+          const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+          const user = userCredential.user;
+          
+          // Save name, uid, and email to the 'users' node in the database
+          await db.ref('users/' + user.uid).set({
+            name: name,
+            email: user.email,
+            uid: user.uid
+          });
+          
           closeSignIn();
           showToast("Account created successfully!");
         } catch (createError) {
@@ -691,14 +711,15 @@
       snapshot.forEach(typeGroup => {
         typeGroup.forEach(ad => {
           const val = ad.val();
-          if (val.title) {
+          // FIX: Only show ads where 'home' field is exactly "yes" or true
+          if (val.title && (val.home === "yes" || val.home === true)) {
             val.time = val.createdAt ? getTimeAgo(val.createdAt) : "Recently";
             val.id = ad.key;
             data.push(val);
           }
         });
       });
-      data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      // Removed the sort by newest function as requested, just displaying them
       renderListings(data.slice(0, 20));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
