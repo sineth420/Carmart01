@@ -226,8 +226,9 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-1">Price (Rs) *</label>
-            <input type="number" id="price" required placeholder="Eg: 4850000" class="input">
+            <!-- FIX: Removed required attribute to allow blank submission -->
+            <label class="block text-sm font-medium text-slate-300 mb-1">Price (Rs)</label>
+            <input type="number" id="price" placeholder="Leave blank if Negotiable" class="input">
           </div>
         </div>
 
@@ -386,19 +387,16 @@
   const auth = firebase.auth();
 
   // ===== AUTH STATE LISTENER =====
-  // This will now execute properly because we are using the Compat SDK
   auth.onAuthStateChanged((user) => {
     const checkingState = document.getElementById('checkingAuthState');
     const formContainer = document.getElementById('formContainer');
     const notLoggedInMsg = document.getElementById('notLoggedInMsg');
 
     if (user) {
-      // User is logged in, show the form
       checkingState.style.display = 'none';
       notLoggedInMsg.style.display = 'none';
       formContainer.style.display = 'block';
     } else {
-      // User is not logged in, show access denied
       checkingState.style.display = 'none';
       formContainer.style.display = 'none';
       notLoggedInMsg.style.display = 'block';
@@ -441,7 +439,6 @@
     const overlay = document.getElementById('loadingOverlay');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Check if user is logged in
     if (!auth.currentUser) {
       showToast("Please log in first to publish an ad.", true);
       setTimeout(() => { window.location.href = 'index.html'; }, 2000);
@@ -455,24 +452,25 @@
       const user = auth.currentUser;
       const uid = user.uid;
 
-      // Fetch the user's name from the 'users' node in the database
       const userRef = db.ref('users/' + uid);
       const userSnapshot = await userRef.get();
       const userData = userSnapshot.val();
       const sellerName = userData && userData.name ? userData.name : "Unknown Seller";
 
-      // Get Contact Details from the form
       const mobileNumber = document.getElementById('mobileNumber').value;
       const whatsappNumber = document.getElementById('whatsappNumber').value || mobileNumber;
 
-      // Gather all form data
+      // FIX: Handle Price logic (if blank, set to "Negotiable")
+      const priceInput = document.getElementById('price').value;
+      const finalPrice = priceInput.trim() === '' ? "Negotiable" : Number(priceInput);
+
       const vehicleType = document.getElementById('vehicleType').value;
       const adData = {
         title: document.getElementById('brand').value,
         vehicleType: vehicleType,
         brand: document.getElementById('brand').value,
         location: document.getElementById('district').value,
-        price: Number(document.getElementById('price').value),
+        price: finalPrice, 
         description: document.getElementById('description').value,
         cc: Number(document.getElementById('cc').value) || 0,
         year: Number(document.getElementById('year').value),
@@ -484,14 +482,16 @@
         sellerName: sellerName, 
         mobileNumber: mobileNumber,
         whatsappNumber: whatsappNumber,
-        userId: uid, // Required for database rules
-        userEmail: user.email, // ADDED: Saving user email along with the details
+        userId: uid, 
+        userEmail: user.email, 
+        home: "no", // ADDED: Boolean "no" so it doesn't show on home initially
+        timestamphome: 0, // ADDED: timestamphome with 0 value
+        timestamp: Date.now() + (15 * 24 * 60 * 60 * 1000), // ADDED: timestamp set to 15 days from now in milliseconds
         createdAt: firebase.database.ServerValue.TIMESTAMP
       };
 
       console.log("Attempting to save data to Firebase...");
       
-      // Save under vehicles/{vehicleType}/{timestamp}
       const customId = Date.now(); 
       const adRefPath = db.ref('vehicles/' + vehicleType + '/' + customId);
       
@@ -501,7 +501,6 @@
       overlay.classList.remove('active');
       showToast("Ad published successfully!", false);
 
-      // Redirect back to home after 1.5 seconds
       setTimeout(() => {
         window.location.href = 'index.html';
       }, 1500);
