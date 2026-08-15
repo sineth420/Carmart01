@@ -485,6 +485,7 @@
         mobileNumber: mobileNumber,
         whatsappNumber: whatsappNumber,
         userId: uid, // Required for database rules
+        userEmail: user.email, // ADDED: Saving user email along with the details
         createdAt: firebase.database.ServerValue.TIMESTAMP
       };
 
