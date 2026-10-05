@@ -542,6 +542,29 @@
   const auth = firebase.auth();
   const vehiclesRef = db.ref('vehicles');
 
+  // ===== NEW: LOCAL IMAGE MAPPING LOGIC =====
+  // Maps vehicle keywords to image paths in your local 'images' folder
+  const knownVehicles = {
+    "hornet": ["images/hornet1.jpg", "images/hornet2.jpg", "images/hornet3.jpg", "images/hornet4.jpg", "images/hornet5.jpg", "images/hornet6.jpg"],
+    "landcruiser": ["images/landcruser1.jpg", "images/landcruser2.jpg", "images/landcruser3.jpg", "images/landcruser4.jpg", "images/landcruser5.jpg", "images/landcruser6.jpg"],
+    "landcruser": ["images/landcruser1.jpg", "images/landcruser2.jpg", "images/landcruser3.jpg", "images/landcruser4.jpg", "images/landcruser5.jpg", "images/landcruser6.jpg"], // Spelling variation
+    "defender": ["images/defender1.jpg", "images/defender2.jpg", "images/defender3.jpg", "images/defender4.jpg", "images/defender5.jpg", "images/defender6.jpg"],
+    // ADD MORE VEHICLES HERE BASED ON YOUR FOLDER CONTENTS
+  };
+
+  function getLocalVehicleImages(title) {
+    if (!title) return null;
+    const lowerTitle = title.toLowerCase();
+    
+    // Iterate over the keys (keywords) in our known vehicles map
+    for (const keyword in knownVehicles) {
+      if (lowerTitle.includes(keyword)) {
+        return knownVehicles[keyword]; // Return the array of images
+      }
+    }
+    return null; // No match found
+  }
+
   // ===== 25 DISTRICTS OF SRI LANKA =====
   const districts = [
     "All Sri Lanka", "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", "Nuwara Eliya",
@@ -661,10 +684,19 @@
       grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500">No vehicles found.</div>';
       return;
     }
-    grid.innerHTML = vehicles.map(v => `
+    grid.innerHTML = vehicles.map(v => {
+      // MODIFIED: Check for local images first
+      const localImages = getLocalVehicleImages(v.title);
+      let imageSrc = v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image';
+      
+      if (localImages && localImages.length > 0) {
+        imageSrc = localImages[0]; // Use the first local image as the main one
+      }
+
+      return `
       <div class="vehicle-card cursor-pointer" onclick="window.location.href='addopen.html?id=${v.id}&type=${encodeURIComponent(v.vehicleType)}'">
         <div class="relative overflow-hidden h-48">
-          <img src="${v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image'}" alt="${v.title}" class="w-full h-full object-cover">
+          <img src="${imageSrc}" alt="${v.title}" class="w-full h-full object-cover">
           ${v.hasVideo ? `
             <div class="absolute top-3 left-3">
               <span class="video-badge"><i class="fa-solid fa-play"></i> Video Ad</span>
@@ -688,7 +720,7 @@
           </div>
         </div>
       </div>
-    `).join('');
+    `}).join('');
   }
 
   async function loadVehicles() {
