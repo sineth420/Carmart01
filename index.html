@@ -22,18 +22,16 @@
   * { box-sizing: border-box; }
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    /* Slightly darker background, not pitch black */
     background-color: #334155; 
     background-image: 
       radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.1), transparent 40%),
       radial-gradient(circle at 100% 100%, rgba(234, 88, 12, 0.1), transparent 40%);
-    color: #f8fafc; /* Light text for outside the glass */
+    color: #f8fafc; 
     margin: 0;
   }
 
-  /* Dark Glassmorphism Box Style */
   .glass-card {
-    background: rgba(15, 23, 42, 0.75); /* Dark slate glass tint */
+    background: rgba(15, 23, 42, 0.75); 
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -41,7 +39,6 @@
     color: #ffffff;
   }
 
-  /* Buttons */
   .btn-primary {
     background-color: var(--primary);
     color: var(--white);
@@ -62,7 +59,6 @@
     box-shadow: 0 6px 12px -2px rgba(249, 115, 22, 0.3);
   }
 
-  /* Burger Menu */
   .burger { width: 28px; height: 20px; position: relative; cursor: pointer; background: transparent; border: none; }
   .burger span { display: block; position: absolute; height: 3px; width: 100%; background: var(--white); border-radius: 2px; transition: all 0.3s ease; }
   .burger span:nth-child(1) { top: 0; }
@@ -72,11 +68,10 @@
   .burger.open span:nth-child(2) { opacity: 0; }
   .burger.open span:nth-child(3) { top: 8px; transform: rotate(-45deg); background: var(--primary); }
 
-  /* Side Panel */
   .side-panel {
     position: fixed; top: 0; right: 0; height: 100vh;
     width: 320px; max-width: 85vw;
-    background: #1e293b; /* Darker panel for dark mode */
+    background: #1e293b; 
     box-shadow: -10px 0 30px rgba(0,0,0,0.2);
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -94,7 +89,6 @@
   }
   .panel-overlay.open { opacity: 1; pointer-events: all; }
 
-  /* Modal (Sign In - Dark Glass) */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px); z-index: 200;
@@ -110,7 +104,6 @@
   }
   .modal-overlay.open .modal { transform: scale(1); }
 
-  /* Inputs - Standard White Background */
   .input {
     width: 100%; padding: 12px 16px; border: 1px solid #475569;
     border-radius: 8px; font-size: 15px; font-family: inherit;
@@ -119,7 +112,6 @@
   }
   .input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
   
-  /* Inputs - For Dark Glass */
   .input-glass {
     width: 100%; padding: 12px 16px; 
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -136,9 +128,8 @@
     box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); 
   }
   
-  /* FIX: Specific styling for Select Dropdowns to match Header */
   select.input-glass, #navLocation, #navLocation option {
-    background-color: #0f172a; /* Same dark color as Header */
+    background-color: #0f172a; 
     color: #ffffff;
   }
   select.input-glass option {
@@ -153,7 +144,6 @@
     pointer-events: none; color: #94a3b8; font-size: 12px;
   }
 
-  /* Cards */
   .vehicle-card {
     background: var(--white); border-radius: 12px; overflow: hidden;
     border: 1px solid #f1f5f9; transition: all 0.3s ease;
@@ -174,14 +164,12 @@
     backdrop-filter: blur(4px);
   }
 
-  /* Skeleton Loader */
   .skeleton {
     background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
     background-size: 200% 100%; animation: shimmer 1.5s infinite;
   }
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-  /* Toast */
   .toast {
     position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%) translateY(100px);
@@ -195,7 +183,7 @@
 </head>
 <body class="antialiased">
 
-<!-- NAVBAR (Dark Glass Design) -->
+<!-- NAVBAR -->
 <nav class="glass-card sticky top-0 z-50" style="border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16 gap-4">
@@ -207,7 +195,6 @@
         <span class="text-xl font-extrabold tracking-tight text-white">Car Mart</span>
       </a>
 
-      <!-- Desktop Search -->
       <div class="hidden md:flex flex-1 max-w-xl items-center border border-white/15 rounded-lg overflow-hidden hover:border-orange-400 transition-colors bg-white/5">
         <input type="text" id="navSearch" placeholder="Search cars, vans, bikes..." class="flex-1 px-4 py-2 outline-none text-sm text-white bg-transparent placeholder-slate-400">
         <div class="select-wrapper border-l border-white/15">
@@ -219,9 +206,7 @@
       </div>
 
       <div class="hidden md:flex items-center gap-3">
-        <div id="authSection">
-          <!-- This will be dynamically updated by JS based on login state -->
-        </div>
+        <div id="authSection"></div>
         
         <a href="cart.html" class="btn-primary relative no-underline" title="My Cart" style="padding: 8px 14px; font-size: 0.85rem;">
           <i class="fa-solid fa-cart-shopping"></i> Cart
@@ -269,7 +254,6 @@
     <a href="#video-feature" onclick="closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium">
       <i class="fa-solid fa-video w-5"></i> Video Ads
     </a>
-    <!-- ADDED SIGN IN BUTTON FOR MOBILE MENU -->
     <button onclick="openSignIn(); closeBurger()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-orange-500 font-medium text-left">
       <i class="fa-solid fa-right-to-bracket w-5"></i> Sign In
     </button>
@@ -294,7 +278,6 @@
       </p>
     </div>
 
-    <!-- Main Search Bar (Dark Glass Box) -->
     <div class="max-w-5xl mx-auto glass-card p-4 rounded-xl">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
         <div class="md:col-span-6 relative">
@@ -406,7 +389,6 @@
     <div class="flex justify-between items-center mb-8">
       <div>
         <h2 id="listingTitle" class="text-2xl font-bold text-white">Recent Vehicle Ads</h2>
-        <!-- Removed the Firebase text paragraph from here -->
       </div>
       <button onclick="loadVehicles()" class="text-orange-500 font-semibold text-sm hover:underline">Reset Search</button>
     </div>
@@ -488,7 +470,7 @@
   </div>
 </footer>
 
-<!-- SIGN IN MODAL (Dark Glass) -->
+<!-- SIGN IN MODAL -->
 <div class="modal-overlay" id="signInModal" onclick="if(event.target.id==='signInModal') closeSignIn()">
   <div class="modal glass-card">
     <div class="flex justify-between items-center mb-6">
@@ -496,7 +478,6 @@
       <button onclick="closeSignIn()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
     <form id="signInForm" class="space-y-4">
-      <!-- ADDED NAME INPUT -->
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
         <input type="text" id="loginName" placeholder="Eg: John Doe (Required for new users)" class="input-glass">
@@ -542,27 +523,27 @@
   const auth = firebase.auth();
   const vehiclesRef = db.ref('vehicles');
 
-  // ===== NEW: LOCAL IMAGE MAPPING LOGIC =====
-  // Maps vehicle keywords to image paths in your local 'images' folder
+  // ===== LOCAL IMAGE MAPPING LOGIC (Robust) =====
   const knownVehicles = {
-    "hornet": ["images/hornet1.jpg", "images/hornet2.jpg", "images/hornet3.jpg", "images/hornet4.jpg", "images/hornet5.jpg", "images/hornet6.jpg"],
-    "landcruiser": ["images/landcruser1.jpg", "images/landcruser2.jpg", "images/landcruser3.jpg", "images/landcruser4.jpg", "images/landcruser5.jpg", "images/landcruser6.jpg"],
-    "landcruser": ["images/landcruser1.jpg", "images/landcruser2.jpg", "images/landcruser3.jpg", "images/landcruser4.jpg", "images/landcruser5.jpg", "images/landcruser6.jpg"], // Spelling variation
-    "defender": ["images/defender1.jpg", "images/defender2.jpg", "images/defender3.jpg", "images/defender4.jpg", "images/defender5.jpg", "images/defender6.jpg"],
-    // ADD MORE VEHICLES HERE BASED ON YOUR FOLDER CONTENTS
+    "hornet": ["images/hornet1.webp", "images/hornet2.webp", "images/hornet3.webp", "images/hornet4.webp", "images/hornet5.webp", "images/hornet6.webp"],
+    "landcruiser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
+    "landcruser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
+    "defender": ["images/defender1.webp", "images/defender2.webp", "images/defender3.webp", "images/defender4.webp", "images/defender5.webp", "images/defender6.webp"],
+    "land cruiser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"] // Added with space
   };
 
   function getLocalVehicleImages(title) {
     if (!title) return null;
-    const lowerTitle = title.toLowerCase();
+    // FIX: Remove spaces and convert to lowercase to handle "Land Cruiser" vs "Landcruiser"
+    const sanitizedTitle = title.toLowerCase().replace(/\s/g, "");
     
-    // Iterate over the keys (keywords) in our known vehicles map
     for (const keyword in knownVehicles) {
-      if (lowerTitle.includes(keyword)) {
-        return knownVehicles[keyword]; // Return the array of images
+      const sanitizedKeyword = keyword.toLowerCase().replace(/\s/g, "");
+      if (sanitizedTitle.includes(sanitizedKeyword)) {
+        return knownVehicles[keyword];
       }
     }
-    return null; // No match found
+    return null;
   }
 
   // ===== 25 DISTRICTS OF SRI LANKA =====
@@ -612,7 +593,7 @@
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    const name = document.getElementById('loginName').value; // ADDED name retrieval
+    const name = document.getElementById('loginName').value;
     
     try {
       await auth.signInWithEmailAndPassword(email, password);
@@ -628,7 +609,6 @@
           const userCredential = await auth.createUserWithEmailAndPassword(email, password);
           const user = userCredential.user;
           
-          // Save name, uid, and email to the 'users' node in the database
           await db.ref('users/' + user.uid).set({
             name: name,
             email: user.email,
@@ -656,7 +636,6 @@
     const cartCount = document.getElementById('cartCount');
     
     if (user) {
-      // FIX: Replaced Logout button with My Account button
       authSection.innerHTML = `<a href="myaccount.html" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">My Account</a>`;
       
       db.ref(`Mycart/${user.uid}`).on('value', (snapshot) => {
@@ -670,7 +649,6 @@
       });
 
     } else {
-      // If not logged in, show Login button
       authSection.innerHTML = `<button onclick="openSignIn()" class="text-sm font-semibold text-slate-200 hover:text-orange-500 transition-colors">Login</button>`;
       cartCount.classList.add('hidden');
     }
@@ -685,12 +663,11 @@
       return;
     }
     grid.innerHTML = vehicles.map(v => {
-      // MODIFIED: Check for local images first
       const localImages = getLocalVehicleImages(v.title);
       let imageSrc = v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image';
       
       if (localImages && localImages.length > 0) {
-        imageSrc = localImages[0]; // Use the first local image as the main one
+        imageSrc = localImages[0];
       }
 
       return `
@@ -743,7 +720,6 @@
       snapshot.forEach(typeGroup => {
         typeGroup.forEach(ad => {
           const val = ad.val();
-          // FIX: Only show ads where 'home' field is exactly "yes" or true
           if (val.title && (val.home === "yes" || val.home === true)) {
             val.time = val.createdAt ? getTimeAgo(val.createdAt) : "Recently";
             val.id = ad.key;
@@ -751,7 +727,6 @@
           }
         });
       });
-      // Removed the sort by newest function as requested, just displaying them
       renderListings(data.slice(0, 20));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
