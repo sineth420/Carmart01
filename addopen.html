@@ -185,7 +185,6 @@
           <i class="fa-solid fa-cart-shopping"></i> Cart
           <span id="cartCount" class="absolute -top-2 -right-2 bg-white text-orange-600 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
         </a>
-        <!-- FIX: Removed Back to Listings button -->
         <a href="add.html" class="btn-primary text-sm no-underline" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">
           <i class="fa-solid fa-plus" aria-hidden="true"></i> Post Ad
         </a>
@@ -258,8 +257,8 @@
           <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Vehicle primary view">
       </div>
       
-      <!-- FIX: Removed hidden classes so all thumbnails show on mobile -->
-      <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+      <!-- Thumbnails (Will be updated by JS) -->
+      <div class="grid grid-cols-4 sm:grid-cols-7 gap-2" id="thumbnailGrid">
         <button class="thumbnail active" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 1">
           <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 1" loading="lazy">
         </button>
@@ -389,6 +388,66 @@
 
   let currentAdData = {}; // To store ad data for cart
 
+  // ===== NEW: LOCAL IMAGE MAPPING LOGIC =====
+  // Maps vehicle keywords to image paths in your local 'images' folder (.webp)
+  const knownVehicles = {
+    "hornet": ["images/hornet1.webp", "images/hornet2.webp", "images/hornet3.webp", "images/hornet4.webp", "images/hornet5.webp", "images/hornet6.webp"],
+    "landcruiser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
+    "landcruser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
+    "defender": ["images/defender1.webp", "images/defender2.webp", "images/defender3.webp", "images/defender4.webp", "images/defender5.webp", "images/defender6.webp"],
+  };
+
+  function getLocalVehicleImages(title) {
+    if (!title) return null;
+    const lowerTitle = title.toLowerCase();
+    
+    for (const keyword in knownVehicles) {
+      if (lowerTitle.includes(keyword)) {
+        return knownVehicles[keyword];
+      }
+    }
+    return null;
+  }
+
+  // Function to update the gallery UI with local images
+  function updateGalleryWithLocalImages(adData) {
+    const localImages = getLocalVehicleImages(adData.title);
+    
+    if (localImages && localImages.length > 0) {
+      const mainMedia = document.getElementById('mainMedia');
+      const thumbnailGrid = document.getElementById('thumbnailGrid');
+      
+      // Clear existing image thumbnails (keep the video one if it exists)
+      // Rebuild the thumbnail grid HTML
+      let thumbsHTML = '';
+      
+      // Create image thumbs
+      localImages.forEach((src, index) => {
+        const activeClass = index === 0 ? 'active' : '';
+        thumbsHTML += `
+          <button class="thumbnail ${activeClass}" onclick="changeMedia('img', '${src}', this)" aria-label="View image ${index + 1}">
+            <img src="${src}" alt="Thumbnail ${index + 1}" loading="lazy">
+          </button>
+        `;
+      });
+      
+      // Add video thumb (keeping the dummy video)
+      thumbsHTML += `
+        <button class="thumbnail video-thumb flex" onclick="changeMedia('video', 'https://www.w3schools.com/html/mov_bbb.mp4', this)" aria-label="Play video">
+          <i class="fa-solid fa-play text-xl" aria-hidden="true"></i>
+          <span class="text-[10px] font-semibold">0:20</span>
+        </button>
+      `;
+      
+      // Update the grid
+      thumbnailGrid.innerHTML = thumbsHTML;
+      
+      // Set the main media to the first image
+      mainMedia.innerHTML = `<img src="${localImages[0]}" alt="Vehicle primary view">`;
+    }
+    // If no local images found, the HTML defaults (unsplash) remain.
+  }
+
   // ===== UI INTERACTIONS =====
   function toggleBurger() {
     const burger = document.getElementById('burger');
@@ -450,11 +509,10 @@
   // ===== ADD TO CART LOGIC =====
   async function addToCart() {
     const user = auth.currentUser;
-    // FIX: If user is not logged in, prevent adding to cart and redirect to login
     if (!user) {
       showToast("Please sign in to add items to cart. Redirecting...");
       setTimeout(() => {
-        window.location.href = 'index.html'; // Redirect to homepage to login
+        window.location.href = 'index.html';
       }, 2000);
       return;
     }
@@ -463,7 +521,7 @@
       const cartRef = db.ref(`Mycart/${user.uid}`);
       const snapshot = await cartRef.once('value');
       const itemCount = snapshot.numChildren();
-      const newItemKey = `item${itemCount + 1}`; // Creates item1, item2, item3...
+      const newItemKey = `item${itemCount + 1}`;
 
       await cartRef.child(newItemKey).set({
         type: currentAdData.type,
@@ -521,8 +579,15 @@
       if (adData) {
         currentAdData = { type, id, ...adData };
 
+        // MODIFIED: Update gallery with local images if available
+        updateGalleryWithLocalImages(adData);
+
         document.getElementById('adTitle').innerText = adData.title || 'Untitled Vehicle';
-        document.getElementById('adPrice').innerText = `Rs ${Number(adData.price || 0).toLocaleString()}`;
+        
+        // Handle Price display (if "Negotiable")
+        const priceDisplay = typeof adData.price === 'number' ? `Rs ${Number(adData.price).toLocaleString()}` : adData.price || 'Negotiable';
+        document.getElementById('adPrice').innerText = priceDisplay;
+
         document.getElementById('adLocation').innerHTML = `<i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${adData.location || 'Sri Lanka'}`;
         document.getElementById('adDescription').innerText = adData.description || 'No description provided.';
         document.getElementById('adYear').innerText = adData.year || 'N/A';
