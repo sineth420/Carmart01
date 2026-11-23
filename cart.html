@@ -41,7 +41,6 @@
 
 <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <h1 class="text-3xl font-extrabold text-white mb-6">My Saved Cart</h1>
-  
   <div id="cartContainer" class="space-y-4">
     <div class="text-center text-slate-400 py-20">Loading your cart...</div>
   </div>
@@ -64,54 +63,30 @@
   const db = firebase.database();
   const auth = firebase.auth();
 
-  // ===== MANUAL DEMO IMAGE LOGIC =====
+  // ===== MANUAL DEMO IMAGE LOGIC (Robust) =====
   function getDemoImage(title) {
     if (!title) return null;
-    const lowerTitle = title.toLowerCase();
-    
-    if (lowerTitle.includes("land cruiser")) {
-      return "images/landcruser1.webp";
-    } else if (lowerTitle.includes("hornet")) {
-      return "images/hornet1.webp";
-    } else if (lowerTitle.includes("yaris")) {
-      return "images/yaris1.jpg";
-    }
+    const sanitizedTitle = title.toLowerCase().replace(/\s/g, "");
+    if (sanitizedTitle.includes("landcruiser") || sanitizedTitle.includes("landcruser")) return "images/landcruser1.webp";
+    if (sanitizedTitle.includes("hornet")) return "images/hornet1.webp";
+    if (sanitizedTitle.includes("yaris")) return "images/yaris1.jpg";
     return null;
   }
 
-  function showToast(msg) { 
-    const t = document.getElementById('toast'); 
-    t.innerText = msg; 
-    t.classList.add('show'); 
-    setTimeout(() => t.classList.remove('show'), 3000); 
-  }
+  function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
   auth.onAuthStateChanged(async (user) => {
     const container = document.getElementById('cartContainer');
-    if (!user) {
-      container.innerHTML = '<div class="text-center text-slate-400 py-20">Please sign in on the homepage to view your cart.</div>';
-      return;
-    }
-
+    if (!user) { container.innerHTML = '<div class="text-center text-slate-400 py-20">Please sign in on the homepage to view your cart.</div>'; return; }
     const cartRef = db.ref(`Mycart/${user.uid}`);
     cartRef.on('value', (snapshot) => {
-      if (!snapshot.exists()) {
-        container.innerHTML = '<div class="text-center text-slate-400 py-20">Your cart is empty.</div>';
-        return;
-      }
-
+      if (!snapshot.exists()) { container.innerHTML = '<div class="text-center text-slate-400 py-20">Your cart is empty.</div>'; return; }
       let html = '';
       snapshot.forEach(child => {
-        const item = child.val();
-        const itemKey = child.key;
-        
-        // Check for manual demo image first
+        const item = child.val(); const itemKey = child.key;
         const demoImage = getDemoImage(item.title);
         const imageSrc = demoImage || item.imageUrl || 'https://via.placeholder.com/150x100?text=No+Image';
-        
-        // FIX Price NaN issue
         const priceDisplay = typeof item.price === 'number' ? `Rs ${item.price.toLocaleString()}` : (item.price || 'Negotiable');
-        
         html += `
           <div class="cart-item flex flex-col sm:flex-row gap-4 p-4">
             <img src="${imageSrc}" class="w-full sm:w-48 h-32 object-cover rounded-lg" alt="${item.title}">
@@ -125,22 +100,16 @@
                 <button onclick="removeItem('${itemKey}')" class="text-red-400 hover:text-red-300 text-sm font-semibold flex items-center gap-1"><i class="fa-solid fa-trash"></i> Remove</button>
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       });
       container.innerHTML = html;
     });
   });
 
   async function removeItem(key) {
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      await db.ref(`Mycart/${user.uid}/${key}`).remove();
-      showToast("Item removed from cart.");
-    } catch (error) {
-      showToast("Error removing item.");
-    }
+    const user = auth.currentUser; if (!user) return;
+    try { await db.ref(`Mycart/${user.uid}/${key}`).remove(); showToast("Item removed from cart."); } 
+    catch (error) { showToast("Error removing item."); }
   }
 </script>
 </body>
