@@ -525,7 +525,7 @@
     const lowerTitle = title.toLowerCase();
     
     if (lowerTitle.includes("land cruiser")) {
-      return "images/landcruiser1.webp";
+      return "images/landcruser1.webp";
     } else if (lowerTitle.includes("hornet")) {
       return "images/hornet1.webp";
     } else if (lowerTitle.includes("yaris")) {
@@ -651,9 +651,11 @@
       return;
     }
     grid.innerHTML = vehicles.map(v => {
-      // Check for manual demo image first
       const demoImage = getDemoImage(v.title);
       let imageSrc = demoImage || v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image';
+
+      // FIX: Price NaN issue
+      const priceDisplay = typeof v.price === 'number' ? `Rs ${v.price.toLocaleString()}` : (v.price || 'Negotiable');
 
       return `
       <div class="vehicle-card cursor-pointer" onclick="window.location.href='addopen.html?id=${v.id}&type=${encodeURIComponent(v.vehicleType)}'">
@@ -675,7 +677,7 @@
         </div>
         <div class="p-4">
           <h3 class="font-bold text-slate-900 truncate">${v.title || 'Untitled Vehicle'}</h3>
-          <p class="text-orange-500 font-extrabold text-lg mt-1">Rs ${Number(v.price || 0).toLocaleString()}</p>
+          <p class="text-orange-500 font-extrabold text-lg mt-1">${priceDisplay}</p>
           <div class="flex items-center justify-between text-xs text-slate-500 mt-3 pt-3 border-t border-slate-100">
             <span><i class="fa-solid fa-location-dot mr-1"></i>${v.location || 'Sri Lanka'}</span>
             <span>${v.time || 'Recently'}</span>
