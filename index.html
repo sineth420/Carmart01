@@ -132,10 +132,6 @@
     background-color: #0f172a; 
     color: #ffffff;
   }
-  select.input-glass option {
-    background-color: #0f172a;
-    color: #ffffff;
-  }
 
   .select-wrapper { position: relative; }
   .select-wrapper::after {
@@ -523,25 +519,17 @@
   const auth = firebase.auth();
   const vehiclesRef = db.ref('vehicles');
 
-  // ===== LOCAL IMAGE MAPPING LOGIC (Robust) =====
-  const knownVehicles = {
-    "hornet": ["images/hornet1.webp", "images/hornet2.webp", "images/hornet3.webp", "images/hornet4.webp", "images/hornet5.webp", "images/hornet6.webp"],
-    "landcruiser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
-    "landcruser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
-    "defender": ["images/defender1.webp", "images/defender2.webp", "images/defender3.webp", "images/defender4.webp", "images/defender5.webp", "images/defender6.webp"],
-    "land cruiser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"] // Added with space
-  };
-
-  function getLocalVehicleImages(title) {
+  // ===== MANUAL DEMO IMAGE LOGIC =====
+  function getDemoImage(title) {
     if (!title) return null;
-    // FIX: Remove spaces and convert to lowercase to handle "Land Cruiser" vs "Landcruiser"
-    const sanitizedTitle = title.toLowerCase().replace(/\s/g, "");
+    const lowerTitle = title.toLowerCase();
     
-    for (const keyword in knownVehicles) {
-      const sanitizedKeyword = keyword.toLowerCase().replace(/\s/g, "");
-      if (sanitizedTitle.includes(sanitizedKeyword)) {
-        return knownVehicles[keyword];
-      }
+    if (lowerTitle.includes("land cruiser")) {
+      return "images/landcruiser1.webp";
+    } else if (lowerTitle.includes("hornet")) {
+      return "images/hornet1.webp";
+    } else if (lowerTitle.includes("yaris")) {
+      return "images/yaris1.jpg";
     }
     return null;
   }
@@ -663,12 +651,9 @@
       return;
     }
     grid.innerHTML = vehicles.map(v => {
-      const localImages = getLocalVehicleImages(v.title);
-      let imageSrc = v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image';
-      
-      if (localImages && localImages.length > 0) {
-        imageSrc = localImages[0];
-      }
+      // Check for manual demo image first
+      const demoImage = getDemoImage(v.title);
+      let imageSrc = demoImage || v.imageUrl || 'https://via.placeholder.com/600x400?text=No+Image';
 
       return `
       <div class="vehicle-card cursor-pointer" onclick="window.location.href='addopen.html?id=${v.id}&type=${encodeURIComponent(v.vehicleType)}'">
