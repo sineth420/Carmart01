@@ -16,7 +16,7 @@
 
 <style>
   :root {
-    --primary: #f97316; /* Orange */
+    --primary: #f97316;
     --primary-dark: #ea580c;
     --white: #ffffff;
     --dark-bg: #0f172a;
@@ -28,15 +28,14 @@
   
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: #f8fafc; /* Clean white/slate background */
+    background-color: #f8fafc;
     color: var(--dark-bg);
     margin: 0;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
-  /* Dark Glassmorphism Box Style */
   .glass-card {
-    background: rgba(15, 23, 42, 0.75); /* Dark slate glass tint */
+    background: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -44,7 +43,6 @@
     color: var(--white);
   }
 
-  /* Navbar Specific Glass */
   .nav-glass {
     border-radius: 0;
     border-left: 0;
@@ -52,7 +50,6 @@
     border-top: 0;
   }
 
-  /* Buttons */
   .btn-primary, .btn-outline {
     padding: 12px 24px;
     border-radius: 8px;
@@ -82,7 +79,6 @@
   }
   .btn-outline:hover { background-color: rgba(255, 255, 255, 0.1); border-color: var(--primary); }
 
-  /* Burger Menu */
   .burger { width: 28px; height: 20px; position: relative; cursor: pointer; background: transparent; border: none; padding: 0; }
   .burger span { display: block; position: absolute; height: 3px; width: 100%; background: var(--white); border-radius: 2px; transition: all 0.3s ease; }
   .burger span:nth-child(1) { top: 0; }
@@ -92,7 +88,6 @@
   .burger.open span:nth-child(2) { opacity: 0; }
   .burger.open span:nth-child(3) { top: 8px; transform: rotate(-45deg); background: var(--primary); }
 
-  /* Side Panel */
   .side-panel {
     position: fixed; top: 0; right: 0; height: 100vh; width: 320px; max-width: 85vw;
     background: var(--white); box-shadow: -10px 0 30px rgba(0,0,0,0.1);
@@ -106,7 +101,6 @@
   }
   .panel-overlay.open { opacity: 1; pointer-events: all; }
 
-  /* Gallery Styles */
   .main-media {
     width: 100%; aspect-ratio: 16/9; background: var(--dark-bg); border-radius: 12px;
     overflow: hidden; display: flex; align-items: center; justify-content: center;
@@ -134,7 +128,6 @@
   .spec-item:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.08); }
   .spec-icon { color: var(--primary); font-size: 18px; margin-bottom: 4px; }
 
-  /* Skeleton Loader */
   .skeleton {
     background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
     background-size: 200% 100%; animation: shimmer 1.5s infinite;
@@ -145,7 +138,6 @@
   }
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-  /* Toast */
   .toast {
     position: fixed; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%;
     transform: translateX(-50%) translateY(100px);
@@ -157,7 +149,6 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* Accessibility Focus States */
   button:focus-visible, a:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
@@ -180,7 +171,6 @@
       </a>
 
       <div class="hidden md:flex items-center gap-3 ml-auto">
-        <!-- MY CART BUTTON (Styled as Primary Orange Button) -->
         <a href="cart.html" class="btn-primary relative no-underline" title="My Cart" aria-label="My Cart" style="padding: 8px 14px; font-size: 0.85rem;">
           <i class="fa-solid fa-cart-shopping"></i> Cart
           <span id="cartCount" class="absolute -top-2 -right-2 bg-white text-orange-600 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
@@ -257,7 +247,6 @@
           <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Vehicle primary view">
       </div>
       
-      <!-- Thumbnails (Will be updated by JS) -->
       <div class="grid grid-cols-4 sm:grid-cols-7 gap-2" id="thumbnailGrid">
         <button class="thumbnail active" onclick="changeMedia('img', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', this)" aria-label="View image 1">
           <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Thumbnail 1" loading="lazy">
@@ -341,7 +330,7 @@
         </p>
       </div>
 
-      <!-- Contact Actions (With Add to Cart Button) -->
+      <!-- Contact Actions -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button id="callBtn" class="btn-primary" aria-label="Call Seller">
           <i class="fa-solid fa-phone" aria-hidden="true"></i> Call
@@ -386,43 +375,37 @@
   const db = firebase.database();
   const auth = firebase.auth();
 
-  let currentAdData = {}; // To store ad data for cart
+  let currentAdData = {};
 
-  // ===== NEW: LOCAL IMAGE MAPPING LOGIC =====
-  // Maps vehicle keywords to image paths in your local 'images' folder (.webp)
-  const knownVehicles = {
-    "hornet": ["images/hornet1.webp", "images/hornet2.webp", "images/hornet3.webp", "images/hornet4.webp", "images/hornet5.webp", "images/hornet6.webp"],
-    "landcruiser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
-    "landcruser": ["images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp", "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"],
-    "defender": ["images/defender1.webp", "images/defender2.webp", "images/defender3.webp", "images/defender4.webp", "images/defender5.webp", "images/defender6.webp"],
-  };
-
-  function getLocalVehicleImages(title) {
-    if (!title) return null;
+  // ===== MANUAL DEMO IMAGE LOGIC FOR GALLERY =====
+  function setupDemoGallery(title) {
+    if (!title) return;
     const lowerTitle = title.toLowerCase();
-    
-    for (const keyword in knownVehicles) {
-      if (lowerTitle.includes(keyword)) {
-        return knownVehicles[keyword];
-      }
-    }
-    return null;
-  }
+    let images = [];
 
-  // Function to update the gallery UI with local images
-  function updateGalleryWithLocalImages(adData) {
-    const localImages = getLocalVehicleImages(adData.title);
-    
-    if (localImages && localImages.length > 0) {
+    if (lowerTitle.includes("land cruiser")) {
+      images = [
+        "images/landcruiser1.webp", "images/landcruiser2.webp", "images/landcruiser3.webp",
+        "images/landcruiser4.webp", "images/landcruiser5.webp", "images/landcruiser6.webp"
+      ];
+    } else if (lowerTitle.includes("hornet")) {
+      images = [
+        "images/hornet1.webp", "images/hornet2.webp", "images/hornet3.webp",
+        "images/hornet4.webp", "images/hornet5.webp"
+      ];
+    } else if (lowerTitle.includes("yaris")) {
+      images = [
+        "images/yaris1.jpg", "images/yaris2.jpg", "images/yaris3.jpg",
+        "images/yaris4.jpg", "images/yaris5.jpg", "images/yaris6.jpg"
+      ];
+    }
+
+    if (images.length > 0) {
       const mainMedia = document.getElementById('mainMedia');
       const thumbnailGrid = document.getElementById('thumbnailGrid');
       
-      // Clear existing image thumbnails (keep the video one if it exists)
-      // Rebuild the thumbnail grid HTML
       let thumbsHTML = '';
-      
-      // Create image thumbs
-      localImages.forEach((src, index) => {
+      images.forEach((src, index) => {
         const activeClass = index === 0 ? 'active' : '';
         thumbsHTML += `
           <button class="thumbnail ${activeClass}" onclick="changeMedia('img', '${src}', this)" aria-label="View image ${index + 1}">
@@ -431,7 +414,7 @@
         `;
       });
       
-      // Add video thumb (keeping the dummy video)
+      // Add video thumb
       thumbsHTML += `
         <button class="thumbnail video-thumb flex" onclick="changeMedia('video', 'https://www.w3schools.com/html/mov_bbb.mp4', this)" aria-label="Play video">
           <i class="fa-solid fa-play text-xl" aria-hidden="true"></i>
@@ -439,13 +422,9 @@
         </button>
       `;
       
-      // Update the grid
       thumbnailGrid.innerHTML = thumbsHTML;
-      
-      // Set the main media to the first image
-      mainMedia.innerHTML = `<img src="${localImages[0]}" alt="Vehicle primary view">`;
+      mainMedia.innerHTML = `<img src="${images[0]}" alt="Vehicle primary view">`;
     }
-    // If no local images found, the HTML defaults (unsplash) remain.
   }
 
   // ===== UI INTERACTIONS =====
@@ -579,12 +558,11 @@
       if (adData) {
         currentAdData = { type, id, ...adData };
 
-        // MODIFIED: Update gallery with local images if available
-        updateGalleryWithLocalImages(adData);
+        // MODIFIED: Setup manual demo gallery
+        setupDemoGallery(adData.title);
 
         document.getElementById('adTitle').innerText = adData.title || 'Untitled Vehicle';
         
-        // Handle Price display (if "Negotiable")
         const priceDisplay = typeof adData.price === 'number' ? `Rs ${Number(adData.price).toLocaleString()}` : adData.price || 'Negotiable';
         document.getElementById('adPrice').innerText = priceDisplay;
 
