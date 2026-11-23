@@ -64,7 +64,27 @@
   const db = firebase.database();
   const auth = firebase.auth();
 
-  function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+  // ===== MANUAL DEMO IMAGE LOGIC =====
+  function getDemoImage(title) {
+    if (!title) return null;
+    const lowerTitle = title.toLowerCase();
+    
+    if (lowerTitle.includes("land cruiser")) {
+      return "images/landcruser1.webp";
+    } else if (lowerTitle.includes("hornet")) {
+      return "images/hornet1.webp";
+    } else if (lowerTitle.includes("yaris")) {
+      return "images/yaris1.jpg";
+    }
+    return null;
+  }
+
+  function showToast(msg) { 
+    const t = document.getElementById('toast'); 
+    t.innerText = msg; 
+    t.classList.add('show'); 
+    setTimeout(() => t.classList.remove('show'), 3000); 
+  }
 
   auth.onAuthStateChanged(async (user) => {
     const container = document.getElementById('cartContainer');
@@ -84,13 +104,21 @@
       snapshot.forEach(child => {
         const item = child.val();
         const itemKey = child.key;
+        
+        // Check for manual demo image first
+        const demoImage = getDemoImage(item.title);
+        const imageSrc = demoImage || item.imageUrl || 'https://via.placeholder.com/150x100?text=No+Image';
+        
+        // FIX Price NaN issue
+        const priceDisplay = typeof item.price === 'number' ? `Rs ${item.price.toLocaleString()}` : (item.price || 'Negotiable');
+        
         html += `
           <div class="cart-item flex flex-col sm:flex-row gap-4 p-4">
-            <img src="${item.imageUrl || 'https://via.placeholder.com/150x100?text=No+Image'}" class="w-full sm:w-48 h-32 object-cover rounded-lg" alt="${item.title}">
+            <img src="${imageSrc}" class="w-full sm:w-48 h-32 object-cover rounded-lg" alt="${item.title}">
             <div class="flex-1 flex flex-col justify-between">
               <div>
                 <h3 class="text-lg font-bold text-white">${item.title}</h3>
-                <p class="text-orange-500 font-extrabold text-xl mt-1">Rs ${Number(item.price || 0).toLocaleString()}</p>
+                <p class="text-orange-500 font-extrabold text-xl mt-1">${priceDisplay}</p>
               </div>
               <div class="flex gap-3 mt-4 sm:mt-0">
                 <a href="addopen.html?id=${item.id}&type=${encodeURIComponent(item.type)}" class="btn-primary text-sm">View Ad</a>
