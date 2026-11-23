@@ -383,10 +383,11 @@
     const lowerTitle = title.toLowerCase();
     let images = [];
 
+    // FIXED FILE NAMES to match user's files exactly (landcruser not landcruiser)
     if (lowerTitle.includes("land cruiser")) {
       images = [
-        "images/landcruiser1.webp", "images/landcruiser2.webp", "images/landcruiser3.webp",
-        "images/landcruiser4.webp", "images/landcruiser5.webp", "images/landcruiser6.webp"
+        "images/landcruser1.webp", "images/landcruser2.webp", "images/landcruser3.webp",
+        "images/landcruser4.webp", "images/landcruser5.webp", "images/landcruser6.webp"
       ];
     } else if (lowerTitle.includes("hornet")) {
       images = [
